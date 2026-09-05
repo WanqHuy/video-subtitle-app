@@ -1,0 +1,39 @@
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-md-7">
+      <div class="card card-modern p-4 p-lg-5 shadow-sm">
+        <span class="badge bg-primary bg-opacity-10 text-primary px-3 py-2 rounded-pill w-auto mb-3 align-self-start">
+          Gói Dịch Vụ Chính Hãng
+        </span>
+        <h2 class="fw-bold mb-2">{{pkg.name}}</h2>
+        <h3 class="text-primary fw-bold mb-4">{{formatCurrency pkg.price}}</h3>
+        <hr class="opacity-25">
+        <h6 class="fw-bold text-dark mb-2">Mô tả sản phẩm:</h6>
+        <p class="text-muted small mb-4">{{pkg.description}}</p>
+        
+        <h6 class="fw-bold text-dark mb-3">Quyền lợi bao gồm:</h6>
+        <ul class="list-group list-group-flush mb-4 rounded-3 border">
+          <li class="list-group-item py-3 d-flex justify-content-between">
+            <span class="text-muted">Thời lượng âm thanh nhận diện</span>
+            <b>{{pkg.durationMinutes}} phút</b>
+          </li>
+          <li class="list-group-item py-3 d-flex justify-content-between">
+            <span class="text-muted">Độ chuẩn xác Whisper AI</span>
+            <b class="text-success">{{pkg.accuracy}}</b>
+          </li>
+          <li class="list-group-item py-3 d-flex justify-content-between">
+            <span class="text-muted">Định dạng hỗ trợ xuất</span>
+            <b>MP4 (Hardsub), SRT, VTT</b>
+          </li>
+        </ul>
+
+        <form action="/cart/add" method="POST">
+          <input type="hidden" name="packageId" value="{{pkg.id}}">
+          <button type="submit" class="btn btn-gradient btn-lg w-100 rounded-pill fw-bold">
+            <i class="bi bi-cart-plus me-2"></i> Thêm Vào Giỏ Hàng
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>

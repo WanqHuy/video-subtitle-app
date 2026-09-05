@@ -1,0 +1,57 @@
+<nav class="navbar navbar-expand-lg navbar-dark navbar-glass sticky-top py-3">
+  <div class="container">
+    <a class="navbar-brand fw-bold fs-4 d-flex align-items-center gap-2" href="/">
+      <i class="bi bi-badge-cc-fill text-primary fs-3"></i>
+      <span class="brand-gradient">AI SUBTITLE</span>
+    </a>
+    <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navContent">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navContent">
+      <ul class="navbar-nav me-auto ms-lg-4 gap-2">
+        <li class="nav-item"><a class="nav-link px-3" href="/">Trang Chủ</a></li>
+        <li class="nav-item"><a class="nav-link px-3" href="/packages">Gói Dịch Vụ</a></li>
+        <li class="nav-item">
+          <a class="nav-link px-3 text-warning fw-semibold d-flex align-items-center gap-1" href="/workspace">
+            <i class="bi bi-stars"></i> Công Cụ Tạo Sub
+          </a>
+        </li>
+        {{#if isAdmin}}
+          <li class="nav-item">
+            <a class="nav-link px-3 text-danger fw-bold" href="/admin">
+              <i class="bi bi-shield-check"></i> Quản Trị
+            </a>
+          </li>
+        {{/if}}
+      </ul>
+      <ul class="navbar-nav align-items-center gap-3">
+        <li class="nav-item">
+          <a class="nav-link position-relative px-3" href="/cart">
+            <i class="bi bi-cart3 fs-5"></i>
+            {{#if cartCount}}
+              <span class="position-absolute top-1 start-100 translate-middle badge rounded-pill bg-danger">
+                {{cartCount}}
+              </span>
+            {{/if}}
+          </a>
+        </li>
+        {{#if currentUser}}
+          <li class="nav-item dropdown">
+            <a class="btn btn-outline-light rounded-pill px-4 dropdown-toggle d-flex align-items-center gap-2" href="#" data-bs-toggle="dropdown">
+              <i class="bi bi-person-circle"></i> {{currentUser.name}}
+            </a>
+            <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 rounded-4 mt-2">
+              <li class="px-3 py-2 text-muted small border-bottom">{{currentUser.email}}</li>
+              <li><a class="dropdown-item py-2 text-danger" href="/logout"><i class="bi bi-box-arrow-right me-2"></i>Đăng Xuất</a></li>
+            </ul>
+          </li>
+        {{else}}
+          <li class="nav-item"><a class="nav-link px-3" href="/login">Đăng Nhập</a></li>
+          <li class="nav-item">
+            <a class="btn btn-gradient rounded-pill px-4 py-2" href="/register">Đăng Ký Miễn Phí</a>
+          </li>
+        {{/if}}
+      </ul>
+    </div>
+  </div>
+</nav>

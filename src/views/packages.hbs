@@ -1,0 +1,26 @@
+<div class="container py-5">
+  <div class="text-center mb-5">
+    <h2 class="fw-bold">Các Gói Phụ Đề AI Chuyên Nghiệp</h2>
+    <p class="text-muted">Chọn thời lượng phù hợp với khối lượng công việc dựng video của bạn</p>
+  </div>
+  <div class="row g-4">
+    {{#each packages}}
+      <div class="col-md-4">
+        <div class="card card-modern h-100 p-4">
+          <div class="card-body d-flex flex-column p-0">
+            <h5 class="fw-bold mb-2">{{this.name}}</h5>
+            <h3 class="text-primary fw-bold my-3">{{formatCurrency this.price}}</h3>
+            <p class="text-muted small flex-grow-1">{{this.description}}</p>
+            <div class="d-flex gap-2 mt-4">
+              <a href="/packages/{{this.id}}" class="btn btn-outline-secondary w-50 rounded-pill">Xem Chi Tiết</a>
+              <form action="/cart/add" method="POST" class="w-50">
+                <input type="hidden" name="packageId" value="{{this.id}}">
+                <button type="submit" class="btn btn-gradient w-100 rounded-pill">Thêm Giỏ Hàng</button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    {{/each}}
+  </div>
+</div>

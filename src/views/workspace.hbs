@@ -1,0 +1,345 @@
+<div class="container py-5">
+  <!-- Tiêu đề trang & Giới thiệu -->
+  <div class="text-center mb-5">
+    <span class="badge bg-primary bg-opacity-10 text-primary px-3 py-2 rounded-pill fw-semibold mb-2">
+      <i class="bi bi-stars me-1"></i> AI Speech Studio v2.0
+    </span>
+    <h2 class="fw-extrabold text-dark display-6">Studio Tạo & Biên Tập Phụ Đề AI</h2>
+    <p class="text-muted mx-auto" style="max-width: 600px;">
+      Chuyển đổi âm thanh video thành phụ đề chính xác từng giây, tự động dịch sang tiếng Việt và xuất video Hardsub sắc nét.
+    </p>
+  </div>
+
+  <!-- Thanh Stepper 3 Bước Trực Quan -->
+  <div class="row justify-content-center mb-5">
+    <div class="col-md-9">
+      <div class="d-flex justify-content-between position-relative">
+        <div class="position-absolute top-50 start-0 end-0 translate-middle-y bg-light border" style="height: 4px; z-index: 0;"></div>
+        
+        <div class="text-center position-relative" style="z-index: 1;">
+          <div class="rounded-circle d-flex align-items-center justify-content-center mx-auto shadow-sm {{#if step2}}bg-success text-white{{else}}{{#if finalSuccess}}bg-success text-white{{else}}bg-primary text-white{{/if}}{{/if}}" style="width: 44px; height: 44px;">
+            {{#if step2}}<i class="bi bi-check-lg fs-5"></i>{{else}}{{#if finalSuccess}}<i class="bi bi-check-lg fs-5"></i>{{else}}1{{/if}}{{/if}}
+          </div>
+          <small class="fw-bold d-block mt-2 {{#unless step2}}{{#unless finalSuccess}}text-primary{{/unless}}{{/unless}}">Tải Video Lên</small>
+        </div>
+
+        <div class="text-center position-relative" style="z-index: 1;">
+          <div class="rounded-circle d-flex align-items-center justify-content-center mx-auto shadow-sm {{#if step2}}bg-primary text-white{{else}}{{#if finalSuccess}}bg-success text-white{{else}}bg-white text-muted border{{/if}}{{/if}}" style="width: 44px; height: 44px;">
+            {{#if finalSuccess}}<i class="bi bi-check-lg fs-5"></i>{{else}}2{{/if}}
+          </div>
+          <small class="fw-bold d-block mt-2 {{#if step2}}text-primary{{else}}text-muted{{/if}}">Biên Tập & Kiểu Chữ</small>
+        </div>
+
+        <div class="text-center position-relative" style="z-index: 1;">
+          <div class="rounded-circle d-flex align-items-center justify-content-center mx-auto shadow-sm {{#if finalSuccess}}bg-primary text-white{{else}}bg-white text-muted border{{/if}}" style="width: 44px; height: 44px;">
+            3
+          </div>
+          <small class="fw-bold d-block mt-2 {{#if finalSuccess}}text-primary{{else}}text-muted{{/if}}">Xuất Video</small>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {{#if error}}
+    <div class="alert alert-danger border-0 shadow-sm rounded-4 mb-4 d-flex align-items-center gap-2">
+      <i class="bi bi-exclamation-octagon-fill fs-5"></i>
+      <div>{{error}}</div>
+    </div>
+  {{/if}}
+
+  <!-- ================= BƯỚC 1: TẢI VIDEO LÊN ================= -->
+  {{#unless step2}}
+    {{#unless finalSuccess}}
+      <div class="row justify-content-center">
+        <div class="col-md-8">
+          <div class="card card-modern p-4 p-lg-5 shadow-sm border-0">
+            <form action="/workspace/upload" method="POST" enctype="multipart/form-data" id="uploadForm">
+              <div class="border border-2 border-dashed rounded-4 p-5 text-center bg-light bg-opacity-50" id="dropZone" style="cursor: pointer; border-color: #cbd5e1 !important;">
+                <div class="mb-3">
+                  <div class="rounded-circle bg-primary bg-opacity-10 text-primary d-inline-flex p-3">
+                    <i class="bi bi-cloud-arrow-up-fill display-5"></i>
+                  </div>
+                </div>
+                <h5 class="fw-bold text-dark mb-1">Chọn hoặc kéo thả tệp video vào đây</h5>
+                <p class="text-muted small mb-3">Hỗ trợ MP4, MKV, WebM (Dung lượng khuyến nghị dưới 100MB)</p>
+                <span class="btn btn-outline-primary rounded-pill px-4 btn-sm fw-semibold">
+                  <i class="bi bi-folder2-open me-1"></i> Duyệt Tệp Trên Máy
+                </span>
+                <input type="file" name="videoFile" id="videoFileInput" class="d-none" accept="video/mp4,video/mkv,video/webm" required>
+                <div id="fileSelectedName" class="mt-3 fw-bold text-success small d-none"></div>
+              </div>
+
+              <div class="bg-light rounded-3 p-3 mt-4 d-flex align-items-center gap-3">
+                <i class="bi bi-info-circle-fill text-primary fs-4"></i>
+                <div class="small text-muted">
+                  <strong>Cơ chế tự động thông minh:</strong> Video tiếng Việt sẽ giữ nguyên lời thoại gốc; video tiếng Anh/Trung sẽ tự động dịch sang tiếng Việt có dấu chuẩn chỉnh.
+                </div>
+              </div>
+
+              <button type="submit" class="btn btn-gradient w-100 py-3 rounded-pill fw-bold fs-6 mt-4 shadow-sm" id="btnUpload">
+                <i class="bi bi-lightning-charge-fill me-1"></i> Bắt Đầu Trích Xuất & Dịch Phụ Đề
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+    {{/unless}}
+  {{/unless}}
+
+  <!-- ================= BƯỚC 2: BIÊN TẬP LỜI THOẠI & PHÔNG CHỮ ================= -->
+  {{#if step2}}
+    <div class="row g-4">
+      <!-- Cột Trái: Video Xem Trước & Công Cụ Tùy Chỉnh Style -->
+      <div class="col-lg-5">
+        <div class="card card-modern p-3 mb-4 shadow-sm border-0">
+          <div class="d-flex align-items-center justify-content-between mb-2">
+            <span class="fw-bold small text-muted"><i class="bi bi-camera-video me-1"></i> Video Gốc</span>
+            <span class="badge bg-light text-dark border">{{originalName}}</span>
+          </div>
+          <video class="w-100 rounded-3 shadow-sm border" controls style="max-height: 240px; background: #000;">
+            <source src="{{videoUrl}}" type="video/mp4">
+          </video>
+        </div>
+
+        <div class="card card-modern p-4 shadow-sm border-0">
+          <h5 class="fw-bold mb-3 d-flex align-items-center gap-2">
+            <i class="bi bi-palette text-primary"></i> Tùy Chỉnh Kiểu Phụ Đề
+          </h5>
+
+          <div class="mb-3">
+            <label class="form-label fw-semibold small text-muted">Phông Chữ (Font Family):</label>
+            <select name="fontName" id="fontSelect" class="form-select rounded-3 py-2">
+              <option value="Arial" selected>Arial (Chuẩn quốc tế - Rõ nét)</option>
+              <option value="Tahoma">Tahoma (Hiện đại, nét tròn)</option>
+              <option value="Verdana">Verdana (Dễ đọc trên màn hình)</option>
+              <option value="Times New Roman">Times New Roman (Cổ điển)</option>
+              <option value="Courier New">Courier New (Máy đánh chữ)</option>
+            </select>
+          </div>
+
+          <div class="row g-2 mb-3">
+            <div class="col-6">
+              <label class="form-label fw-semibold small text-muted">Cỡ Chữ:</label>
+              <select name="fontSize" id="sizeSelect" class="form-select rounded-3 py-2">
+                <option value="18">18px (Nhỏ)</option>
+                <option value="22" selected>22px (Chuẩn)</option>
+                <option value="26">26px (Lớn)</option>
+                <option value="32">32px (Nổi bật)</option>
+              </select>
+            </div>
+            <div class="col-6">
+              <label class="form-label fw-semibold small text-muted">Màu Chữ:</label>
+              <select name="fontColor" id="colorSelect" class="form-select rounded-3 py-2">
+                <option value="white" selected>⚪ Trắng Tinh</option>
+                <option value="yellow">🟡 Vàng Tươi (TikTok)</option>
+                <option value="cyan">🔵 Xanh Cyan</option>
+                <option value="green">🟢 Xanh Neon</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="mb-4">
+            <label class="form-label fw-semibold small text-muted">Viền Chữ Chống Chói:</label>
+            <select name="outlineColor" id="outlineSelect" class="form-select rounded-3 py-2">
+              <option value="black" selected>Viền đen tương phản (Khuyên dùng)</option>
+              <option value="none">Không viền</option>
+            </select>
+          </div>
+
+          <div class="p-3 bg-light rounded-3 text-center border">
+            <small class="text-muted d-block mb-1">Bản xem trước mẫu:</small>
+            <span id="previewSubtitle" class="fw-bold fs-5 px-3 py-1 rounded" style="color: #ffffff; background: #000; text-shadow: 1px 1px 2px #000;">
+              Mẫu Phụ Đề Hiển Thị Trên Video
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Cột Phải: Bảng Timeline Sửa Câu Chữ -->
+      <div class="col-lg-7">
+        <div class="card card-modern p-4 shadow-sm border-0 h-100 d-flex flex-column">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <div>
+              <h5 class="fw-bold mb-1 d-flex align-items-center gap-2">
+                <i class="bi bi-pencil-square text-success"></i> Biên Tập Phụ Đề
+              </h5>
+              <small class="text-muted">Nhấp chuột trực tiếp vào ô để sửa câu hoặc thời gian</small>
+            </div>
+            <span class="badge bg-primary bg-opacity-10 text-primary px-3 py-2 rounded-pill">
+              {{subtitleList.length}} phân đoạn
+            </span>
+          </div>
+
+          <div class="table-responsive flex-grow-1 border rounded-3" style="max-height: 520px; overflow-y: auto;">
+            <table class="table table-hover align-middle mb-0" id="subTable">
+              <thead class="table-light sticky-top">
+                <tr class="small text-muted">
+                  <th style="width: 8%;" class="text-center py-3">#</th>
+                  <th style="width: 32%;" class="py-3">Mốc Thời Gian</th>
+                  <th style="width: 60%;" class="py-3">Nội Dung Lời Thoại</th>
+                </tr>
+              </thead>
+              <tbody>
+                {{#each subtitleList}}
+                  <tr data-index="{{this.index}}">
+                    <td class="text-center fw-bold text-muted">{{this.index}}</td>
+                    <td>
+                      <input type="text" class="form-control form-control-sm font-monospace border-0 bg-light sub-time py-2" value="{{this.startTime}} --> {{this.endTime}}">
+                    </td>
+                    <td>
+                      <textarea class="form-control form-control-sm border-0 bg-light sub-text py-2" rows="2">{{this.text}}</textarea>
+                    </td>
+                  </tr>
+                {{/each}}
+              </tbody>
+            </table>
+          </div>
+
+          <form action="/workspace/render" method="POST" id="renderForm" class="mt-4">
+            <input type="hidden" name="videoFilename" value="{{videoFilename}}">
+            <input type="hidden" name="srtContent" id="finalSrtContent">
+            <input type="hidden" name="fontName" id="hiddenFont">
+            <input type="hidden" name="fontSize" id="hiddenSize">
+            <input type="hidden" name="fontColor" id="hiddenColor">
+            <input type="hidden" name="outlineColor" id="hiddenOutline">
+
+            <button type="submit" class="btn btn-success btn-lg w-100 py-3 rounded-pill fw-bold shadow-sm" id="btnRender">
+              <i class="bi bi-file-earmark-play-fill me-2"></i> Xuất Video Hardsub Hoàn Thiện
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  {{/if}}
+
+  <!-- ================= BƯỚC 3: KẾT QUẢ CUỐI CÙNG ================= -->
+  {{#if finalSuccess}}
+    <div class="row justify-content-center">
+      <div class="col-md-9">
+        <div class="card card-modern p-4 p-lg-5 shadow-sm border-0 text-center">
+          <div class="mb-3">
+            <div class="rounded-circle bg-success bg-opacity-10 text-success d-inline-flex p-3">
+              <i class="bi bi-check-circle-fill display-5"></i>
+            </div>
+          </div>
+          <h3 class="fw-bold text-dark mb-1">Video Của Bạn Đã Xử Lý Thành Công!</h3>
+          <p class="text-muted small mb-4">Phụ đề đã được gắn cứng sắc nét trực tiếp vào khung hình của video.</p>
+
+          <div class="rounded-4 overflow-hidden border shadow-sm mb-4 mx-auto" style="max-width: 720px; background: #000;">
+            <video class="w-100 d-block" controls style="max-height: 440px;">
+              <source src="{{outputVideoUrl}}" type="video/mp4">
+            </video>
+          </div>
+
+          <div class="d-flex flex-wrap justify-content-center gap-3">
+            <a href="{{outputVideoUrl}}" download="video-subtitled.mp4" class="btn btn-gradient btn-lg px-4 py-3 rounded-pill fw-bold shadow-sm">
+              <i class="bi bi-download me-2"></i> Tải Video MP4 Về Máy
+            </a>
+            <a href="data:text/plain;charset=utf-8,{{srtContent}}" download="subtitles.srt" class="btn btn-outline-secondary btn-lg px-4 py-3 rounded-pill">
+              <i class="bi bi-filetype-srt me-2"></i> Tải File .SRT Riêng
+            </a>
+            <a href="/workspace" class="btn btn-light btn-lg px-4 py-3 rounded-pill border">
+              <i class="bi bi-arrow-repeat me-2"></i> Tạo Phụ Đề Video Khác
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  {{/if}}
+</div>
+
+<!-- JavaScript tương tác Studio -->
+<script>
+  // Xử lý kéo thả và duyệt file
+  const dropZone = document.getElementById('dropZone');
+  const fileInput = document.getElementById('videoFileInput');
+  const fileNameDiv = document.getElementById('fileSelectedName');
+
+  if (dropZone && fileInput) {
+    dropZone.addEventListener('click', () => fileInput.click());
+    
+    fileInput.addEventListener('change', () => {
+      if (fileInput.files.length > 0) {
+        fileNameDiv.textContent = `✓ Đã chọn tệp: ${fileInput.files[0].name}`;
+        fileNameDiv.classList.remove('d-none');
+      }
+    });
+
+    dropZone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      dropZone.style.borderColor = '#4f46e5';
+      dropZone.style.background = '#eef2ff';
+    });
+
+    dropZone.addEventListener('dragleave', () => {
+      dropZone.style.borderColor = '#cbd5e1';
+      dropZone.style.background = 'rgba(248, 250, 252, 0.5)';
+    });
+
+    dropZone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dropZone.style.borderColor = '#cbd5e1';
+      dropZone.style.background = 'rgba(248, 250, 252, 0.5)';
+      if (e.dataTransfer.files.length > 0) {
+        fileInput.files = e.dataTransfer.files;
+        fileNameDiv.textContent = `✓ Đã kéo thả tệp: ${fileInput.files[0].name}`;
+        fileNameDiv.classList.remove('d-none');
+      }
+    });
+  }
+
+  // Hiệu ứng chờ tải video lên
+  const upForm = document.getElementById('uploadForm');
+  if (upForm) {
+    upForm.addEventListener('submit', function() {
+      const btn = document.getElementById('btnUpload');
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Đang lắng nghe giọng nói & dịch tự động...';
+    });
+  }
+
+  // Tương tác xem trước phông chữ trực tiếp
+  const fontSelect = document.getElementById('fontSelect');
+  const colorSelect = document.getElementById('colorSelect');
+  const preview = document.getElementById('previewSubtitle');
+
+  function updatePreview() {
+    if (!preview) return;
+    if (fontSelect) preview.style.fontFamily = fontSelect.value;
+    if (colorSelect) {
+      if (colorSelect.value === 'white') preview.style.color = '#ffffff';
+      if (colorSelect.value === 'yellow') preview.style.color = '#ffff00';
+      if (colorSelect.value === 'cyan') preview.style.color = '#00ffff';
+      if (colorSelect.value === 'green') preview.style.color = '#00ff66';
+    }
+  }
+
+  if (fontSelect) fontSelect.addEventListener('change', updatePreview);
+  if (colorSelect) colorSelect.addEventListener('change', updatePreview);
+
+  // Thu thập dữ liệu trước khi xuất video
+  const renderForm = document.getElementById('renderForm');
+  if (renderForm) {
+    renderForm.addEventListener('submit', function() {
+      const rows = document.querySelectorAll('#subTable tbody tr');
+      let compiledSrt = '';
+
+      rows.forEach((row) => {
+        const idx = row.getAttribute('data-index');
+        const timeRange = row.querySelector('.sub-time').value.trim();
+        const text = row.querySelector('.sub-text').value.trim();
+        compiledSrt += `${idx}\n${timeRange}\n${text}\n\n`;
+      });
+
+      document.getElementById('finalSrtContent').value = compiledSrt;
+      document.getElementById('hiddenFont').value = document.getElementById('fontSelect').value;
+      document.getElementById('hiddenSize').value = document.getElementById('sizeSelect').value;
+      document.getElementById('hiddenColor').value = document.getElementById('colorSelect').value;
+      document.getElementById('hiddenOutline').value = document.getElementById('outlineSelect').value;
+
+      const btn = document.getElementById('btnRender');
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Đang render và gắn phụ đề vào video...';
+    });
+  }
+</script>

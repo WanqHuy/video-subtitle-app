@@ -1,0 +1,45 @@
+<div class="container py-5">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h2 class="fw-bold mb-1">Quản Trị Hệ Thống</h2>
+      <p class="text-muted small mb-0">Quản lý danh sách các gói sản phẩm phụ đề AI</p>
+    </div>
+    <a href="/admin/packages/create" class="btn btn-success rounded-pill px-4">
+      <i class="bi bi-plus-lg me-1"></i> Thêm Gói Mới
+    </a>
+  </div>
+
+  <div class="card card-modern p-4 shadow-sm">
+    <div class="table-responsive">
+      <table class="table align-middle mb-0">
+        <thead class="table-light">
+          <tr>
+            <th class="py-3">Tên Gói</th>
+            <th class="py-3">Giá Bán</th>
+            <th class="py-3">Thời Lượng</th>
+            <th class="py-3">Độ Chính Xác</th>
+            <th class="py-3 text-end">Hành Động</th>
+          </tr>
+        </thead>
+        <tbody>
+          {{#each packages}}
+            <tr>
+              <td class="py-3 fw-bold">{{this.name}}</td>
+              <td class="py-3 text-primary fw-semibold">{{formatCurrency this.price}}</td>
+              <td class="py-3">{{this.durationMinutes}} phút</td>
+              <td class="py-3"><span class="badge bg-success bg-opacity-10 text-success px-3 py-2 rounded-pill">{{this.accuracy}}</span></td>
+              <td class="py-3 text-end">
+                <a href="/admin/packages/edit/{{this.id}}" class="btn btn-outline-primary btn-sm rounded-pill px-3 me-2">
+                  <i class="bi bi-pencil"></i> Sửa
+                </a>
+                <a href="/admin/packages/delete/{{this.id}}" onclick="return confirm('Bạn có chắc muốn xoá gói này không?')" class="btn btn-outline-danger btn-sm rounded-pill px-3">
+                  <i class="bi bi-trash"></i> Xoá
+                </a>
+              </td>
+            </tr>
+          {{/each}}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

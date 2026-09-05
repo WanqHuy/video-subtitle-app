@@ -1,0 +1,128 @@
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-lg-10">
+      <!-- Nút điều hướng quay lại -->
+      <div class="mb-4">
+        <a href="/admin" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
+          <i class="bi bi-arrow-left me-1"></i> Quay lại Danh Sách Quản Trị
+        </a>
+      </div>
+
+      <div class="row g-4">
+        <!-- Cột Nhập Liệu Form -->
+        <div class="col-lg-7">
+          <div class="card card-modern p-4 p-lg-5 shadow-sm border-0">
+            <div class="d-flex align-items-center gap-3 mb-4">
+              <div class="rounded-circle bg-success bg-opacity-10 text-success p-3">
+                <i class="bi bi-box-seam-fill fs-4"></i>
+              </div>
+              <div>
+                <h4 class="fw-bold mb-0">Thêm Gói Dịch Vụ Mới</h4>
+                <small class="text-muted">Tạo mới gói phụ đề phục vụ người dùng mua và sử dụng</small>
+              </div>
+            </div>
+
+            <form action="/admin/packages/create" method="POST">
+              <div class="mb-3">
+                <label class="form-label fw-semibold small text-muted">Tên Gói Dịch Vụ:</label>
+                <div class="input-group">
+                  <span class="input-group-text bg-light border-end-0 rounded-start-3"><i class="bi bi-tag"></i></span>
+                  <input type="text" name="name" id="pkgName" class="form-control rounded-end-3 py-2 border-start-0" placeholder="Ví dụ: Gói Siêu Tốc (Creator Plus)" required>
+                </div>
+              </div>
+
+              <div class="row g-3 mb-3">
+                <div class="col-md-6">
+                  <label class="form-label fw-semibold small text-muted">Giá Bán (VNĐ):</label>
+                  <div class="input-group">
+                    <span class="input-group-text bg-light border-end-0 rounded-start-3"><i class="bi bi-currency-dollar"></i></span>
+                    <input type="number" name="price" id="pkgPrice" class="form-control rounded-end-3 py-2 border-start-0" placeholder="150000" required>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label fw-semibold small text-muted">Thời Lượng Xử Lý (Phút):</label>
+                  <div class="input-group">
+                    <span class="input-group-text bg-light border-end-0 rounded-start-3"><i class="bi bi-clock-history"></i></span>
+                    <input type="number" name="durationMinutes" id="pkgDuration" class="form-control rounded-end-3 py-2 border-start-0" placeholder="120" required>
+                  </div>
+                </div>
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label fw-semibold small text-muted">Độ Chính Xác:</label>
+                <div class="input-group">
+                  <span class="input-group-text bg-light border-end-0 rounded-start-3"><i class="bi bi-bullseye"></i></span>
+                  <input type="text" name="accuracy" id="pkgAccuracy" class="form-control rounded-end-3 py-2 border-start-0" placeholder="Ví dụ: 99%" required>
+                </div>
+              </div>
+
+              <div class="mb-4">
+                <label class="form-label fw-semibold small text-muted">Mô Tả Quyền Lợi Gói:</label>
+                <textarea name="description" id="pkgDesc" class="form-control rounded-3" rows="4" placeholder="Nhập các quyền lợi và tính năng nổi bật..." required></textarea>
+              </div>
+
+              <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-success rounded-pill px-5 py-2 fw-bold shadow-sm">
+                  <i class="bi bi-check2-circle me-1"></i> Lưu Gói Mới
+                </button>
+                <a href="/admin" class="btn btn-light rounded-pill px-4 py-2 border">Hủy Bỏ</a>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <!-- Cột Xem Trước (Live Preview) -->
+        <div class="col-lg-5">
+          <div class="card card-modern p-4 shadow-sm border-0 sticky-top" style="top: 100px;">
+            <span class="badge bg-light text-muted border mb-3 align-self-start">Xem Trước Diện Mạo Gói</span>
+            <div class="card-body p-0">
+              <h5 class="fw-bold text-dark mb-1" id="previewTitle">Tên Gói Phụ Đề Mới</h5>
+              <div class="my-3">
+                <span class="display-6 fw-bold text-primary" id="previewPrice">0 ₫</span>
+              </div>
+              <p class="text-muted small mb-4" id="previewDesc">Mô tả tóm tắt tính năng của gói sẽ hiển thị tại đây khi bạn nhập vào form bên cạnh...</p>
+              <ul class="list-unstyled d-flex flex-column gap-2 mb-4 small">
+                <li class="d-flex align-items-center gap-2">
+                  <i class="bi bi-check-circle-fill text-success"></i> Thời lượng: <b id="previewDuration">0 phút</b>
+                </li>
+                <li class="d-flex align-items-center gap-2">
+                  <i class="bi bi-check-circle-fill text-success"></i> Độ chính xác: <b id="previewAccuracy">--</b>
+                </li>
+                <li class="d-flex align-items-center gap-2">
+                  <i class="bi bi-check-circle-fill text-success"></i> Tự động nhận diện và dịch AI
+                </li>
+              </ul>
+              <button class="btn btn-gradient w-100 rounded-pill disabled opacity-75">Nút Mua Mẫu</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Script cập nhật trực tiếp Preview -->
+<script>
+  const nameInput = document.getElementById('pkgName');
+  const priceInput = document.getElementById('pkgPrice');
+  const durationInput = document.getElementById('pkgDuration');
+  const accuracyInput = document.getElementById('pkgAccuracy');
+  const descInput = document.getElementById('pkgDesc');
+
+  nameInput.addEventListener('input', (e) => {
+    document.getElementById('previewTitle').textContent = e.target.value || 'Tên Gói Phụ Đề Mới';
+  });
+  priceInput.addEventListener('input', (e) => {
+    const val = Number(e.target.value) || 0;
+    document.getElementById('previewPrice').textContent = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(val);
+  });
+  durationInput.addEventListener('input', (e) => {
+    document.getElementById('previewDuration').textContent = `${e.target.value || 0} phút`;
+  });
+  accuracyInput.addEventListener('input', (e) => {
+    document.getElementById('previewAccuracy').textContent = e.target.value || '--';
+  });
+  descInput.addEventListener('input', (e) => {
+    document.getElementById('previewDesc').textContent = e.target.value || 'Mô tả tóm tắt tính năng...';
+  });
+</script>

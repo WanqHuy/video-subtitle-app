@@ -1,0 +1,128 @@
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-lg-10">
+      <div class="mb-4">
+        <a href="/admin" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
+          <i class="bi bi-arrow-left me-1"></i> Quay lại Danh Sách Quản Trị
+        </a>
+      </div>
+
+      <div class="row g-4">
+        <!-- Cột Form Chỉnh Sửa -->
+        <div class="col-lg-7">
+          <div class="card card-modern p-4 p-lg-5 shadow-sm border-0">
+            <div class="d-flex align-items-center gap-3 mb-4">
+              <div class="rounded-circle bg-warning bg-opacity-10 text-warning p-3">
+                <i class="bi bi-pencil-square fs-4"></i>
+              </div>
+              <div>
+                <h4 class="fw-bold mb-0">Chỉnh Sửa Gói Dịch Vụ</h4>
+                <small class="text-muted">Cập nhật thông tin chi tiết hoặc giá bán của gói</small>
+              </div>
+            </div>
+
+            <form action="/admin/packages/edit/{{pkg.id}}" method="POST">
+              <div class="mb-3">
+                <label class="form-label fw-semibold small text-muted">Tên Gói Dịch Vụ:</label>
+                <div class="input-group">
+                  <span class="input-group-text bg-light border-end-0 rounded-start-3"><i class="bi bi-tag"></i></span>
+                  <input type="text" name="name" id="editPkgName" value="{{pkg.name}}" class="form-control rounded-end-3 py-2 border-start-0" required>
+                </div>
+              </div>
+
+              <div class="row g-3 mb-3">
+                <div class="col-md-6">
+                  <label class="form-label fw-semibold small text-muted">Giá Bán (VNĐ):</label>
+                  <div class="input-group">
+                    <span class="input-group-text bg-light border-end-0 rounded-start-3"><i class="bi bi-currency-dollar"></i></span>
+                    <input type="number" name="price" id="editPkgPrice" value="{{pkg.price}}" class="form-control rounded-end-3 py-2 border-start-0" required>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label fw-semibold small text-muted">Thời Lượng (Phút):</label>
+                  <div class="input-group">
+                    <span class="input-group-text bg-light border-end-0 rounded-start-3"><i class="bi bi-clock-history"></i></span>
+                    <input type="number" name="durationMinutes" id="editPkgDuration" value="{{pkg.durationMinutes}}" class="form-control rounded-end-3 py-2 border-start-0" required>
+                  </div>
+                </div>
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label fw-semibold small text-muted">Độ Chính Xác:</label>
+                <div class="input-group">
+                  <span class="input-group-text bg-light border-end-0 rounded-start-3"><i class="bi bi-bullseye"></i></span>
+                  <input type="text" name="accuracy" id="editPkgAccuracy" value="{{pkg.accuracy}}" class="form-control rounded-end-3 py-2 border-start-0" required>
+                </div>
+              </div>
+
+              <div class="mb-4">
+                <label class="form-label fw-semibold small text-muted">Mô Tả Gói:</label>
+                <textarea name="description" id="editPkgDesc" class="form-control rounded-3" rows="4" required>{{pkg.description}}</textarea>
+              </div>
+
+              <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-primary rounded-pill px-5 py-2 fw-bold shadow-sm">
+                  <i class="bi bi-check-lg me-1"></i> Lưu Cập Nhật
+                </button>
+                <a href="/admin" class="btn btn-light rounded-pill px-4 py-2 border">Hủy</a>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <!-- Cột Xem Trước (Live Preview) -->
+        <div class="col-lg-5">
+          <div class="card card-modern p-4 shadow-sm border-0 sticky-top" style="top: 100px;">
+            <span class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25 mb-3 align-self-start">
+              Bản Xem Trước Thực Tế
+            </span>
+            <div class="card-body p-0">
+              <h5 class="fw-bold text-dark mb-1" id="editPreviewTitle">{{pkg.name}}</h5>
+              <div class="my-3">
+                <span class="display-6 fw-bold text-primary" id="editPreviewPrice">{{formatCurrency pkg.price}}</span>
+              </div>
+              <p class="text-muted small mb-4" id="editPreviewDesc">{{pkg.description}}</p>
+              <ul class="list-unstyled d-flex flex-column gap-2 mb-4 small">
+                <li class="d-flex align-items-center gap-2">
+                  <i class="bi bi-check-circle-fill text-success"></i> Thời lượng: <b id="editPreviewDuration">{{pkg.durationMinutes}} phút</b>
+                </li>
+                <li class="d-flex align-items-center gap-2">
+                  <i class="bi bi-check-circle-fill text-success"></i> Độ chính xác: <b id="editPreviewAccuracy">{{pkg.accuracy}}</b>
+                </li>
+                <li class="d-flex align-items-center gap-2">
+                  <i class="bi bi-check-circle-fill text-success"></i> Tự động trích xuất và dịch AI
+                </li>
+              </ul>
+              <button class="btn btn-gradient w-100 rounded-pill disabled opacity-75">Nút Mua Mẫu</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const eName = document.getElementById('editPkgName');
+  const ePrice = document.getElementById('editPkgPrice');
+  const eDuration = document.getElementById('editPkgDuration');
+  const eAccuracy = document.getElementById('editPkgAccuracy');
+  const eDesc = document.getElementById('editPkgDesc');
+
+  eName.addEventListener('input', (e) => {
+    document.getElementById('editPreviewTitle').textContent = e.target.value;
+  });
+  ePrice.addEventListener('input', (e) => {
+    const val = Number(e.target.value) || 0;
+    document.getElementById('editPreviewPrice').textContent = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(val);
+  });
+  eDuration.addEventListener('input', (e) => {
+    document.getElementById('editPreviewDuration').textContent = `${e.target.value || 0} phút`;
+  });
+  eAccuracy.addEventListener('input', (e) => {
+    document.getElementById('editPreviewAccuracy').textContent = e.target.value;
+  });
+  eDesc.addEventListener('input', (e) => {
+    document.getElementById('editPreviewDesc').textContent = e.target.value;
+  });
+</script>

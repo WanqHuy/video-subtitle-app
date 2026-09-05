@@ -1,0 +1,28 @@
+<div class="container py-5 text-center">
+  <div class="card card-modern p-5 mx-auto shadow-sm" style="max-width: 550px;">
+    <div class="mb-3 text-success">
+      <i class="bi bi-check-circle-fill display-3"></i>
+    </div>
+    <h2 class="fw-bold">Thanh Toán Hoàn Tất!</h2>
+    <p class="text-muted">Cảm ơn bạn đã mua gói dịch vụ phụ đề tại hệ thống.</p>
+
+    <div class="bg-light p-3 rounded-4 my-3 text-start small">
+      <div class="d-flex justify-content-between mb-2">
+        <span class="text-muted">Mã hoá đơn:</span>
+        <b>{{order.id}}</b>
+      </div>
+      <div class="d-flex justify-content-between mb-2">
+        <span class="text-muted">Tổng thanh toán:</span>
+        <b class="text-danger">{{formatCurrency order.total}}</b>
+      </div>
+      <div class="d-flex justify-content-between">
+        <span class="text-muted">Thời gian:</span>
+        <span>{{order.date}}</span>
+      </div>
+    </div>
+
+    <a href="/workspace" class="btn btn-gradient btn-lg rounded-pill fw-bold mt-2">
+      <i class="bi bi-stars me-2"></i> Đến Công Cụ Tạo Sub Ngay
+    </a>
+  </div>
+</div>

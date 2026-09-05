@@ -1,0 +1,41 @@
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-md-5">
+      <div class="card card-modern p-4 p-lg-5 shadow-sm">
+        <div class="text-center mb-4">
+          <i class="bi bi-person-plus-fill text-success fs-1"></i>
+          <h3 class="fw-bold mt-2">Tạo Tài Khoản</h3>
+          <p class="text-muted small">Đăng ký hoàn toàn miễn phí để bắt đầu tạo phụ đề</p>
+        </div>
+
+        {{#if error}}
+          <div class="alert alert-danger border-0 rounded-3 small mb-3">
+            <i class="bi bi-x-circle-fill me-1"></i> {{error}}
+          </div>
+        {{/if}}
+
+        <form action="/register" method="POST">
+          <div class="mb-3">
+            <label class="form-label fw-semibold small">Họ và Tên:</label>
+            <input type="text" name="name" class="form-control rounded-3 py-2" placeholder="Nguyễn Văn A" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-semibold small">Email:</label>
+            <input type="email" name="email" class="form-control rounded-3 py-2" placeholder="name@example.com" required>
+          </div>
+          <div class="mb-4">
+            <label class="form-label fw-semibold small">Mật khẩu:</label>
+            <input type="password" name="password" class="form-control rounded-3 py-2" placeholder="Tối thiểu 6 ký tự" required>
+          </div>
+          <button type="submit" class="btn btn-success w-100 py-2 rounded-pill fw-bold shadow-sm">
+            Tạo Tài Khoản
+          </button>
+        </form>
+
+        <p class="text-center mt-4 text-muted small mb-0">
+          Đã có tài khoản? <a href="/login" class="text-primary fw-bold text-decoration-none">Đăng nhập tại đây</a>
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
