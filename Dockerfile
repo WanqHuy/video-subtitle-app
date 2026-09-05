@@ -1,6 +1,6 @@
-FROM node:18-bookworm
+FROM node:20-bookworm
 
-# Cài đặt FFmpeg kèm font hệ thống, bỏ qua driver đồ họa thừa để tránh lỗi 404
+# Cài đặt FFmpeg và font chữ hệ thống trên Debian 12
 RUN apt-get update && \
     apt-get install -y --no-install-recommends ffmpeg fonts-dejavu-core && \
     rm -rf /var/lib/apt/lists/*

@@ -1,3 +1,11 @@
+const nodeCrypto = require('crypto');
+if (!globalThis.crypto) {
+  globalThis.crypto = nodeCrypto;
+}
+if (!global.crypto) {
+  global.crypto = nodeCrypto;
+}
+
 const express = require('express');
 const { engine } = require('express-handlebars');
 const path = require('path');
