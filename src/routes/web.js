@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const multer = require('multer');
 const path = require('path');
+const fs = require('fs');
 
 const packageController = require('../controllers/packageController');
 const authController = require('../controllers/authController');
@@ -11,15 +12,26 @@ const subtitleController = require('../controllers/subtitleController');
 
 const { requireAuth, requireAdmin } = require('../middlewares/authMiddleware');
 
+// Đường dẫn tuyệt đối đến thư mục uploads ở thư mục gốc
+const uploadDir = path.join(__dirname, '../../uploads');
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
+}
+
+// Cấu hình Multer tự động kiểm tra và tạo thư mục trước khi lưu file
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, path.join(__dirname, '../../uploads'));
+    if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir, { recursive: true });
+    }
+    cb(null, uploadDir);
   },
   filename: (req, file, cb) => {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
     cb(null, uniqueSuffix + path.extname(file.originalname));
   }
 });
+
 const upload = multer({ storage });
 
 // Routes Công Khai
@@ -33,8 +45,6 @@ router.post('/login', authController.postLogin);
 router.get('/register', authController.getRegister);
 router.post('/register', authController.postRegister);
 router.get('/logout', authController.logout);
-
-// Routes Đổi Mật Khẩu (Bắt buộc đã đăng nhập)
 router.get('/change-password', requireAuth, authController.getChangePassword);
 router.post('/change-password', requireAuth, authController.postChangePassword);
 
@@ -56,7 +66,7 @@ router.get('/workspace', requireAuth, subtitleController.getWorkspace);
 router.post('/workspace/upload', requireAuth, upload.single('videoFile'), subtitleController.uploadVideo);
 router.post('/workspace/render', requireAuth, subtitleController.renderVideo);
 
-// Routes Quản Trị Hệ Thống (Admin Only)
+// Routes Quản Trị Hệ Thống (Admin)
 router.get('/admin', requireAdmin, adminController.getDashboard);
 router.get('/admin/packages/create', requireAdmin, adminController.getCreatePackage);
 router.post('/admin/packages/create', requireAdmin, adminController.postCreatePackage);

@@ -12,6 +12,9 @@ RUN npm install
 
 COPY . .
 
+# Tạo sẵn thư mục lưu trữ trong container
+RUN mkdir -p uploads public/outputs
+
 EXPOSE 5000
 
 CMD ["node", "server.js"]
