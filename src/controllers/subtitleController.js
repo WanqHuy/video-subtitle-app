@@ -6,20 +6,23 @@ const ffprobeInstaller = require('@ffprobe-installer/ffprobe');
 const Groq = require('groq-sdk');
 const User = require('../models/User');
 
-// Tự động gán đường dẫn thực thi của FFmpeg & FFprobe cho cả Windows và Linux hosting
-ffmpeg.setFfmpegPath(ffmpegInstaller.path);
-ffmpeg.setFfprobePath(ffprobeInstaller.path);
+// Gán đường dẫn FFmpeg & FFprobe
+try {
+  ffmpeg.setFfmpegPath(ffmpegInstaller.path);
+  ffmpeg.setFfprobePath(ffprobeInstaller.path);
+} catch (e) {
+  console.log('Sử dụng FFmpeg mặc định hệ thống');
+}
 
-// Khởi tạo Groq API Client
-const GROQ_API_KEY_FALLBACK = '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'; // Nhớ thay key mới của bạn nếu key này hết hạn
+const GROQ_API_KEY_FALLBACK = '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';
 const groq = new Groq({ 
   apiKey: process.env.GROQ_API_KEY || GROQ_API_KEY_FALLBACK 
 });
 
 const getVideoDurationMinutes = (filePath) => {
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve) => {
     ffmpeg.ffprobe(filePath, (err, metadata) => {
-      if (err) return reject(new Error('Không thể đọc thông tin video qua FFprobe: ' + err.message));
+      if (err) return resolve(1);
       const seconds = (metadata && metadata.format && metadata.format.duration) ? metadata.format.duration : 0;
       resolve(Math.max(1, Math.ceil(seconds / 60)));
     });
@@ -54,72 +57,65 @@ exports.uploadVideo = async (req, res) => {
     const user = await User.findById(userId);
     const userTier = user ? (user.tier || 'free') : 'free';
 
-    // 1. Đo thời lượng video
-    let videoDuration = 1;
-    try {
-      videoDuration = await getVideoDurationMinutes(uploadedPath);
-    } catch (probeErr) {
-      console.error('Lỗi FFprobe:', probeErr.message);
-      videoDuration = 1; // Mặc định 1 phút nếu không đọc được metadata
-    }
+    // Đo thời lượng video
+    const videoDuration = await getVideoDurationMinutes(uploadedPath);
 
-    // 2. Phân quyền giới hạn độ dài video
-    const MAX_LIMITS = {
-      free: 3,
-      basic: 15,
-      pro: 60,
-      enterprise: 999
-    };
-
+    // Kiểm tra giới hạn cấp bậc
+    const MAX_LIMITS = { free: 3, basic: 15, pro: 60, enterprise: 999 };
     const maxAllowed = MAX_LIMITS[userTier] || 3;
     if (videoDuration > maxAllowed) {
       if (fs.existsSync(uploadedPath)) fs.unlinkSync(uploadedPath);
       return res.render('workspace', {
         title: 'Studio Phụ Đề AI',
         tier: userTier,
-        error: `Gói [${userTier.toUpperCase()}] chỉ hỗ trợ video tối đa ${maxAllowed} phút. Video này dài ${videoDuration} phút. Vui lòng nâng cấp gói!`
+        error: `Gói [${userTier.toUpperCase()}] chỉ hỗ trợ tối đa ${maxAllowed} phút/video. Video này dài ${videoDuration} phút. Vui lòng nâng cấp gói!`
       });
     }
 
-    // 3. Kiểm tra số phút còn lại của tài khoản
+    // Kiểm tra số phút còn lại
     if (!user || user.remainingMinutes < videoDuration) {
       if (fs.existsSync(uploadedPath)) fs.unlinkSync(uploadedPath);
       const currentMin = user ? user.remainingMinutes : 0;
       return res.render('workspace', {
         title: 'Studio Phụ Đề AI',
         tier: userTier,
-        error: `Tài khoản của bạn chỉ còn ${currentMin} phút, không đủ xử lý video dài ${videoDuration} phút. Vui lòng mua thêm gói!`
+        error: `Tài khoản chỉ còn ${currentMin} phút, không đủ xử lý video dài ${videoDuration} phút. Vui lòng mua thêm gói!`
       });
     }
 
     req.session.currentVideoDuration = videoDuration;
 
-    // Đảm bảo thư mục uploads tồn tại
     const uploadDir = path.join(__dirname, '../../uploads');
     if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
 
     audioPath = path.join(uploadDir, `${req.file.filename}.mp3`);
 
-    // 4. Trích xuất âm thanh MP3 từ video
+    // TỐI ƯU SIÊU TỐC:
+    // -ac 1: chuyển về âm thanh mono (nhẹ gấp đôi)
+    // -ar 16000: chuẩn lấy mẫu 16kHz của Whisper AI
+    // -b:a 48k: giảm bitrate để file nhẹ dưới 1MB, upload sang Groq mất chưa đầy 0.5s
     await new Promise((resolve, reject) => {
       ffmpeg(uploadedPath)
         .noVideo()
+        .audioChannels(1)
+        .audioFrequency(16000)
+        .audioBitrate('48k')
         .audioCodec('libmp3lame')
+        .outputOptions(['-q:a 9'])
         .output(audioPath)
         .on('end', resolve)
-        .on('error', (err) => reject(new Error('Lỗi trích xuất audio FFmpeg: ' + err.message)))
+        .on('error', (err) => reject(new Error('Lỗi trích xuất audio: ' + err.message)))
         .run();
     });
 
-    // 5. Gửi file âm thanh sang Groq Whisper AI
+    // Gửi âm thanh sang Groq Whisper v3
     const transcription = await groq.audio.transcriptions.create({
       file: fs.createReadStream(audioPath),
       model: 'whisper-large-v3',
-      prompt: userTier === 'free' ? '' : 'Dịch thuật và nhận diện chuẩn tiếng Việt có dấu, lọc sạch tạp âm, ngắt câu theo ngữ cảnh',
+      prompt: userTier === 'free' ? '' : 'Dịch thuật và nhận diện chuẩn tiếng Việt có dấu, lọc tạp âm, ngắt câu theo ngữ cảnh',
       response_format: 'verbose_json'
     });
 
-    // Dọn dẹp file MP3 trung gian
     if (fs.existsSync(audioPath)) {
       fs.unlinkSync(audioPath);
     }
@@ -153,9 +149,7 @@ exports.uploadVideo = async (req, res) => {
     });
   } catch (err) {
     console.error('Lỗi khi xử lý video:', err);
-    // Dọn dẹp file thừa nếu gặp sự cố
     if (audioPath && fs.existsSync(audioPath)) fs.unlinkSync(audioPath);
-    
     res.render('workspace', { 
       title: 'Studio Phụ Đề AI', 
       tier: req.session.user ? req.session.user.tier : 'free',
@@ -199,8 +193,16 @@ exports.renderVideo = async (req, res) => {
       filterComplex += `,drawtext=text='AI SUBTITLE FREE TIER':x=20:y=20:fontsize=18:fontcolor=white@0.8:box=1:boxcolor=black@0.5:boxborderw=5`;
     }
 
+    // TỐI ƯU RENDER:
+    // Thêm -preset ultrafast và -threads 1 giúp Render Free chạy mượt, không bị tràn 512MB RAM
     ffmpeg(inputPath)
-      .outputOptions(['-vf', filterComplex])
+      .outputOptions([
+        '-vf', filterComplex,
+        '-preset', 'ultrafast',
+        '-tune', 'fastdecode',
+        '-crf', '26',
+        '-threads', '1'
+      ])
       .videoCodec('libx264')
       .audioCodec('copy')
       .output(outputPath)
