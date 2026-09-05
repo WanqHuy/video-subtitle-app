@@ -1,57 +1,116 @@
-<nav class="navbar navbar-expand-lg navbar-dark navbar-glass sticky-top py-3">
+<nav class="navbar navbar-expand-lg navbar-dark glass-nav py-3 sticky-top">
   <div class="container">
-    <a class="navbar-brand fw-bold fs-4 d-flex align-items-center gap-2" href="/">
-      <i class="bi bi-badge-cc-fill text-primary fs-3"></i>
-      <span class="brand-gradient">AI SUBTITLE</span>
+    <!-- Logo thương hiệu: AI màu trắng tinh, SUB màu xanh sáng tương phản cao -->
+    <a class="navbar-brand fw-extrabold fs-4 text-white d-flex align-items-center gap-2" href="/">
+      <div class="rounded-3 bg-primary d-flex align-items-center justify-content-center text-white" style="width: 38px; height: 38px; box-shadow: 0 0 15px rgba(99, 102, 241, 0.6);">
+        <i class="bi bi-badge-cc-fill fs-5"></i>
+      </div>
+      <span class="tracking-tight text-white">AI<span style="color: #38bdf8;">SUB</span></span>
     </a>
-    <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navContent">
+
+    <button class="navbar-toggler border-0 shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#navbarMain">
       <span class="navbar-toggler-icon"></span>
     </button>
-    <div class="collapse navbar-collapse" id="navContent">
-      <ul class="navbar-nav me-auto ms-lg-4 gap-2">
-        <li class="nav-item"><a class="nav-link px-3" href="/">Trang Chủ</a></li>
-        <li class="nav-item"><a class="nav-link px-3" href="/packages">Gói Dịch Vụ</a></li>
+
+    <div class="collapse navbar-collapse" id="navbarMain">
+      <ul class="navbar-nav me-auto mb-2 mb-lg-0 ms-lg-4 gap-1">
         <li class="nav-item">
-          <a class="nav-link px-3 text-warning fw-semibold d-flex align-items-center gap-1" href="/workspace">
-            <i class="bi bi-stars"></i> Công Cụ Tạo Sub
+          <a class="nav-link px-3 fw-medium text-light opacity-75 opacity-100-hover" href="/">Trang Chủ</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link px-3 fw-medium text-light opacity-75 opacity-100-hover" href="/packages">Bảng Giá</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link px-3 fw-semibold text-warning" href="/workspace">
+            <i class="bi bi-stars me-1"></i> Studio Tạo Sub
           </a>
         </li>
         {{#if isAdmin}}
           <li class="nav-item">
-            <a class="nav-link px-3 text-danger fw-bold" href="/admin">
-              <i class="bi bi-shield-check"></i> Quản Trị
+            <a class="nav-link px-3 fw-semibold text-danger" href="/admin">
+              <i class="bi bi-shield-lock me-1"></i> Quản Trị
             </a>
           </li>
         {{/if}}
       </ul>
-      <ul class="navbar-nav align-items-center gap-3">
-        <li class="nav-item">
-          <a class="nav-link position-relative px-3" href="/cart">
-            <i class="bi bi-cart3 fs-5"></i>
-            {{#if cartCount}}
-              <span class="position-absolute top-1 start-100 translate-middle badge rounded-pill bg-danger">
-                {{cartCount}}
-              </span>
-            {{/if}}
-          </a>
-        </li>
+
+      <div class="d-flex align-items-center gap-3">
+        <!-- Nút Giỏ Hàng -->
+        <a href="/cart" class="btn btn-dark rounded-circle position-relative border border-secondary border-opacity-50 p-2 d-flex align-items-center justify-content-center" style="width: 42px; height: 42px;">
+          <i class="bi bi-bag fs-5 text-light"></i>
+          {{#if cartCount}}
+            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger border border-dark">
+              {{cartCount}}
+            </span>
+          {{/if}}
+        </a>
+
         {{#if currentUser}}
-          <li class="nav-item dropdown">
-            <a class="btn btn-outline-light rounded-pill px-4 dropdown-toggle d-flex align-items-center gap-2" href="#" data-bs-toggle="dropdown">
-              <i class="bi bi-person-circle"></i> {{currentUser.name}}
-            </a>
-            <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 rounded-4 mt-2">
-              <li class="px-3 py-2 text-muted small border-bottom">{{currentUser.email}}</li>
-              <li><a class="dropdown-item py-2 text-danger" href="/logout"><i class="bi bi-box-arrow-right me-2"></i>Đăng Xuất</a></li>
+          <!-- Badge Số Phút -->
+          <div class="d-none d-md-flex align-items-center bg-dark bg-opacity-75 border border-primary border-opacity-30 rounded-pill px-3 py-1 text-light small">
+            <i class="bi bi-clock-history text-warning me-2"></i>
+            <span>Còn: <strong class="text-white">{{currentUser.remainingMinutes}}</strong>p</span>
+          </div>
+
+          <!-- Badge Cấp Bậc -->
+          {{#if (eq currentUser.tier 'enterprise')}}
+            <span class="badge bg-warning text-dark px-3 py-2 rounded-pill fw-bold shadow-sm">
+              <i class="bi bi-gem me-1"></i> ENTERPRISE
+            </span>
+          {{else if (eq currentUser.tier 'pro')}}
+            <span class="badge bg-info text-dark px-3 py-2 rounded-pill fw-bold shadow-sm">
+              <i class="bi bi-patch-check-fill me-1"></i> PRO
+            </span>
+          {{else if (eq currentUser.tier 'basic')}}
+            <span class="badge bg-success bg-opacity-25 text-success-emphasis border border-success border-opacity-50 px-3 py-2 rounded-pill fw-semibold">
+              BASIC
+            </span>
+          {{else}}
+            <span class="badge bg-secondary bg-opacity-25 text-light border border-secondary border-opacity-50 px-3 py-2 rounded-pill fw-normal">
+              FREE
+            </span>
+          {{/if}}
+
+          <!-- Dropdown Profile -->
+          <div class="dropdown">
+            <button class="btn btn-outline-light rounded-pill dropdown-toggle px-3 py-2 fw-medium d-flex align-items-center gap-2 border-opacity-25 shadow-none" type="button" data-bs-toggle="dropdown">
+              <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center fw-bold" style="width: 24px; height: 24px; font-size: 11px;">
+                {{currentUser.name.[0]}}
+              </div>
+              <span class="small">{{currentUser.name}}</span>
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 rounded-4 mt-2 p-3" style="min-width: 240px; background: #ffffff;">
+              <li class="pb-2 mb-2 border-bottom">
+                <div class="text-muted small">Đăng nhập với email:</div>
+                <div class="fw-bold text-dark text-truncate">{{currentUser.email}}</div>
+                <div class="mt-2 d-flex justify-content-between align-items-center">
+                  <span class="badge bg-light text-dark border">Cấp: <strong class="text-uppercase text-primary">{{#if currentUser.tier}}{{currentUser.tier}}{{else}}FREE{{/if}}</strong></span>
+                  <span class="badge bg-light text-dark border">Phút: <strong>{{currentUser.remainingMinutes}}</strong></span>
+                </div>
+              </li>
+              <li>
+                <a class="dropdown-item rounded-3 py-2 small d-flex align-items-center gap-2" href="/packages">
+                  <i class="bi bi-lightning-charge text-warning"></i> Nâng cấp gói cước
+                </a>
+              </li>
+              <li>
+                <a class="dropdown-item rounded-3 py-2 small d-flex align-items-center gap-2 text-dark" href="/change-password">
+                  <i class="bi bi-key text-primary"></i> Đổi mật khẩu
+                </a>
+              </li>
+              <li><hr class="dropdown-divider my-1"></li>
+              <li>
+                <a class="dropdown-item rounded-3 py-2 small d-flex align-items-center gap-2 text-danger" href="/logout">
+                  <i class="bi bi-box-arrow-right"></i> Đăng xuất
+                </a>
+              </li>
             </ul>
-          </li>
+          </div>
         {{else}}
-          <li class="nav-item"><a class="nav-link px-3" href="/login">Đăng Nhập</a></li>
-          <li class="nav-item">
-            <a class="btn btn-gradient rounded-pill px-4 py-2" href="/register">Đăng Ký Miễn Phí</a>
-          </li>
+          <a href="/login" class="btn btn-outline-light rounded-pill px-4 py-2 small fw-medium border-opacity-25">Đăng Nhập</a>
+          <a href="/register" class="btn btn-primary rounded-pill px-4 py-2 small fw-bold shadow-sm">Bắt Đầu Miễn Phí</a>
         {{/if}}
-      </ul>
+      </div>
     </div>
   </div>
 </nav>

@@ -1,181 +1,205 @@
-require('dotenv').config();
-const fs = require('fs');
 const path = require('path');
-const Groq = require('groq-sdk');
+const fs = require('fs');
 const ffmpeg = require('fluent-ffmpeg');
-const ffmpegPath = require('ffmpeg-static');
-const translate = require('@iamtraction/google-translate');
+const Groq = require('groq-sdk');
+const User = require('../models/User');
 
-ffmpeg.setFfmpegPath(ffmpegPath);
-const groq = new Groq({ apiKey: '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' });
+// DÁN API KEY GROQ MỚI CỦA BẠN VÀO ĐÂY NẾU CHƯA CÓ TRONG FILE .ENV:
+const GROQ_API_KEY_FALLBACK = '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';
 
-function formatSRTTime(seconds) {
-  const totalMs = Math.floor(seconds * 1000);
-  const ms = String(totalMs % 1000).padStart(3, '0');
-  const totalSeconds = Math.floor(totalMs / 1000);
-  const ss = String(totalSeconds % 60).padStart(2, '0');
-  const mm = String(Math.floor((totalSeconds / 60) % 60)).padStart(2, '0');
-  const hh = String(Math.floor(totalSeconds / 3600)).padStart(2, '0');
-  return `${hh}:${mm}:${ss},${ms}`;
-}
+const groq = new Groq({ 
+  apiKey: process.env.GROQ_API_KEY || GROQ_API_KEY_FALLBACK
+});
 
-exports.getWorkspace = (req, res) => {
-  res.render('workspace', { title: 'Công Cụ Tạo Phụ Đề Video Tự Động' });
+const getVideoDurationMinutes = (filePath) => {
+  return new Promise((resolve, reject) => {
+    ffmpeg.ffprobe(filePath, (err, metadata) => {
+      if (err) return reject(err);
+      const seconds = (metadata && metadata.format && metadata.format.duration) ? metadata.format.duration : 0;
+      resolve(Math.max(1, Math.ceil(seconds / 60)));
+    });
+  });
 };
 
-// BƯỚC 1: Xử lý AI nhận diện, dịch và trả về giao diện chỉnh sửa
-exports.processVideo = async (req, res) => {
-  if (!req.file) {
-    return res.render('workspace', {
-      title: 'Công Cụ Tạo Phụ Đề',
-      error: 'Vui lòng chọn file video!',
-    });
-  }
+exports.getWorkspace = async (req, res) => {
+  const user = await User.findById(req.session.user.id || req.session.user._id).lean();
+  res.render('workspace', { 
+    title: 'Studio Phụ Đề AI',
+    tier: user ? (user.tier || 'free') : 'free'
+  });
+};
 
-  // Chuyển video sang thư mục public/temp_videos để người dùng có thể xem trước
-  const tempDir = path.join(__dirname, '../../public/temp_videos');
-  if (!fs.existsSync(tempDir)) {
-    fs.mkdirSync(tempDir, { recursive: true });
-  }
-
-  const videoFilename = path.basename(req.file.path);
-  const tempVideoPath = path.join(tempDir, videoFilename);
-  fs.copyFileSync(req.file.path, tempVideoPath);
-
+exports.uploadVideo = async (req, res) => {
   try {
-    // 1. Whisper nhận diện và lấy timestamp
-    const transcription = await groq.audio.transcriptions.create({
-      file: fs.createReadStream(req.file.path),
-      model: 'whisper-large-v3',
-      response_format: 'verbose_json',
-      temperature: 0.0,
+    if (!req.file) {
+      return res.render('workspace', { 
+        title: 'Studio Phụ Đề AI', 
+        error: 'Vui lòng chọn một tệp video hợp lệ!' 
+      });
+    }
+
+    const userId = req.session.user.id || req.session.user._id;
+    const user = await User.findById(userId);
+    const userTier = user ? (user.tier || 'free') : 'free';
+
+    const videoDuration = await getVideoDurationMinutes(req.file.path);
+
+    const MAX_LIMITS = {
+      free: 3,
+      basic: 15,
+      pro: 60,
+      enterprise: 999
+    };
+
+    const maxAllowed = MAX_LIMITS[userTier] || 3;
+    if (videoDuration > maxAllowed) {
+      if (fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
+      return res.render('workspace', {
+        title: 'Studio Phụ Đề AI',
+        tier: userTier,
+        error: `Gói cước [${userTier.toUpperCase()}] chỉ cho phép video tối đa ${maxAllowed} phút/lần. Video này dài ${videoDuration} phút. Vui lòng nâng cấp gói cao hơn!`
+      });
+    }
+
+    if (!user || user.remainingMinutes < videoDuration) {
+      if (fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
+      const currentMin = user ? user.remainingMinutes : 0;
+      return res.render('workspace', {
+        title: 'Studio Phụ Đề AI',
+        tier: userTier,
+        error: `Tài khoản của bạn chỉ còn ${currentMin} phút, nhưng video dài ${videoDuration} phút. Vui lòng mua thêm gói cước!`
+      });
+    }
+
+    req.session.currentVideoDuration = videoDuration;
+
+    const audioPath = path.join(__dirname, '../../uploads', `${req.file.filename}.mp3`);
+
+    // Tách âm thanh MP3 từ video
+    await new Promise((resolve, reject) => {
+      ffmpeg(req.file.path)
+        .noVideo()
+        .audioCodec('libmp3lame')
+        .output(audioPath)
+        .on('end', resolve)
+        .on('error', reject)
+        .run();
     });
 
-    let segments = transcription.segments || [];
-    if (segments.length === 0 && transcription.text) {
-      segments = [{ start: 0, end: 5, text: transcription.text }];
+    // Gọi AI Whisper
+    const transcription = await groq.audio.transcriptions.create({
+      file: fs.createReadStream(audioPath),
+      model: 'whisper-large-v3',
+      prompt: userTier === 'free' ? '' : 'Dịch thuật và nhận diện chuẩn tiếng Việt có dấu, lọc sạch tạp âm, ngắt câu theo ngữ cảnh',
+      response_format: 'verbose_json'
+    });
+
+    if (fs.existsSync(audioPath)) {
+      fs.unlinkSync(audioPath);
     }
 
-    const detectedLanguage = transcription.language || '';
+    const segments = transcription.segments || [];
+    const formatTime = (secs) => {
+      const pad = (n, z = 2) => ('00' + n).slice(-z);
+      const h = Math.floor(secs / 3600);
+      const m = Math.floor((secs % 3600) / 60);
+      const s = Math.floor(secs % 60);
+      const ms = Math.floor((secs % 1) * 1000);
+      return `${pad(h)}:${pad(m)}:${pad(s)},${pad(ms, 3)}`;
+    };
 
-    // 2. Tự động dịch sang Tiếng Việt nếu video là ngoại ngữ
-    if (detectedLanguage !== 'vi' && detectedLanguage !== 'vietnamese' && segments.length > 0) {
-      for (const seg of segments) {
-        const cleanText = seg.text.trim();
-        if (cleanText) {
-          try {
-            const tr = await translate(cleanText, { to: 'vi' });
-            seg.text = tr.text;
-          } catch (e) {
-            console.warn('Lỗi dịch câu:', e.message);
-          }
-        }
-      }
-    }
-
-    // Định dạng thành danh sách các dòng sub có index, start, end, text
     const subtitleList = segments.map((seg, idx) => ({
       index: idx + 1,
-      startTime: formatSRTTime(seg.start),
-      endTime: formatSRTTime(seg.end),
-      text: seg.text.trim()
+      startTime: formatTime(seg.start),
+      endTime: formatTime(seg.end),
+      text: seg.text ? seg.text.trim() : ''
     }));
 
-    // Chuẩn bị nội dung SRT ban đầu
-let srtContent = '';
-    subtitleList.forEach((s) => {
-      srtContent += `${s.index}\n${s.startTime} --> ${s.endTime}\n${s.text}\n\n`;
-    });
-
     res.render('workspace', {
-      title: 'Chỉnh Sửa & Tùy Biến Phụ Đề',
+      title: 'Biên Tập Phụ Đề',
       step2: true,
+      tier: userTier,
+      videoFilename: req.file.filename,
+      videoUrl: `/uploads/${req.file.filename}`,
       originalName: req.file.originalname,
-      videoFilename: videoFilename,
-      videoUrl: `/temp_videos/${videoFilename}`,
-      subtitleList: subtitleList,
-      srtContent: srtContent
+      subtitleList,
+      videoDuration
     });
-
-  } catch (error) {
-    console.error('Lỗi AI:', error);
-    res.render('workspace', {
-      title: 'Lỗi AI',
-      error: 'Không thể phân tích video: ' + error.message,
+  } catch (err) {
+    console.error('Lỗi xử lý video:', err);
+    res.render('workspace', { 
+      title: 'Studio Phụ Đề AI', 
+      error: `Lỗi xử lý âm thanh: ${err.message}` 
     });
   }
 };
 
-// BƯỚC 2: Nhận phụ đề đã sửa + font chữ để FFmpeg gắn cứng vào video
-exports.renderFinalVideo = async (req, res) => {
-  const { videoFilename, srtContent, fontName, fontSize, fontColor, outlineColor } = req.body;
-  const tempVideoPath = path.join(__dirname, '../../public/temp_videos', videoFilename);
+exports.renderVideo = async (req, res) => {
+  try {
+    const { videoFilename, srtContent, fontName, fontSize, fontColor } = req.body;
+    const srtPath = path.join(__dirname, '../../uploads', `${videoFilename}.srt`);
+    const outputFilename = `subtitled-${videoFilename}`;
+    const outputPath = path.join(__dirname, '../../public/outputs', outputFilename);
+    const inputPath = path.join(__dirname, '../../uploads', videoFilename);
 
-  if (!fs.existsSync(tempVideoPath)) {
-    return res.render('workspace', {
-      title: 'Lỗi',
-      error: 'Không tìm thấy file video tạm thời. Vui lòng tải lại từ đầu!',
+    const userId = req.session.user.id || req.session.user._id;
+    const user = await User.findById(userId);
+    const userTier = user ? (user.tier || 'free') : 'free';
+
+    fs.writeFileSync(srtPath, srtContent, 'utf-8');
+
+    const normalizedSrtPath = srtPath.replace(/\\/g, '/').replace(/:/g, '\\:');
+
+    let primaryColorCode = '&H00FFFFFF';
+    if (userTier !== 'free') {
+      if (fontColor === 'yellow') primaryColorCode = '&H0000FFFF';
+      if (fontColor === 'cyan') primaryColorCode = '&H00FFFF00';
+      if (fontColor === 'green') primaryColorCode = '&H0066FF00';
+    }
+
+    let subtitleFilter = `subtitles='${normalizedSrtPath}':force_style='FontName=${fontName || 'Arial'},FontSize=${fontSize || '22'},PrimaryColour=${primaryColorCode},OutlineColour=&H00000000,BorderStyle=1,Outline=2,Shadow=1'`;
+
+    let filterComplex = subtitleFilter;
+    if (userTier === 'free' || userTier === 'basic') {
+      filterComplex += `,drawtext=text='AI SUBTITLE FREE TIER':x=20:y=20:fontsize=18:fontcolor=white@0.8:box=1:boxcolor=black@0.5:boxborderw=5`;
+    }
+
+    ffmpeg(inputPath)
+      .outputOptions(['-vf', filterComplex])
+      .videoCodec('libx264')
+      .audioCodec('copy')
+      .output(outputPath)
+      .on('end', async () => {
+        if (fs.existsSync(srtPath)) fs.unlinkSync(srtPath);
+
+        const durationToDeduct = req.session.currentVideoDuration || 1;
+        if (req.session.user) {
+          await User.findByIdAndUpdate(userId, {
+            $inc: { remainingMinutes: -durationToDeduct }
+          });
+        }
+        req.session.currentVideoDuration = null;
+
+        res.render('workspace', {
+          title: 'Xuất Video Thành Công',
+          finalSuccess: true,
+          tier: userTier,
+          outputVideoUrl: `/outputs/${outputFilename}`,
+          srtContent
+        });
+      })
+      .on('error', (err) => {
+        console.error('Lỗi render:', err);
+        res.render('workspace', { 
+          title: 'Studio Phụ Đề AI', 
+          error: `Lỗi render video: ${err.message}` 
+        });
+      })
+      .run();
+  } catch (err) {
+    res.render('workspace', { 
+      title: 'Studio Phụ Đề AI', 
+      error: err.message 
     });
   }
-
-  const timestamp = Date.now();
-  const srtPath = path.join(__dirname, '../../uploads', `${timestamp}.srt`);
-  const outputVideoName = `subtitled-${timestamp}.mp4`;
-  const outputDir = path.join(__dirname, '../../public/outputs');
-  const outputVideoPath = path.join(outputDir, outputVideoName);
-
-  if (!fs.existsSync(outputDir)) {
-    fs.mkdirSync(outputDir, { recursive: true });
-  }
-
-  // Ghi file SRT sau khi người dùng đã chỉnh sửa
-  fs.writeFileSync(srtPath, srtContent.replace(/\r\n/g, '\n'), 'utf-8');
-
-  const escapedSrtPath = srtPath.replace(/\\/g, '/').replace(/:/g, '\\:');
-
-  // Bản đồ màu sắc chuẩn ASS / FFmpeg (&HAABBGGRR)
-  let primaryColour = '&H00FFFFFF'; // Mặc định: Trắng
-  if (fontColor === 'yellow') primaryColour = '&H0000FFFF';
-  if (fontColor === 'cyan') primaryColour = '&H00FFFF00';
-  if (fontColor === 'green') primaryColour = '&H0000FF00';
-
-  let borderColour = '&H00000000'; // Mặc định: Viền Đen
-  if (outlineColor === 'none') borderColour = '&H00FFFFFF';
-
-  const selectedFont = fontName || 'Arial';
-  const selectedSize = fontSize || '22';
-
-  ffmpeg(tempVideoPath)
-    .outputOptions([
-      `-vf subtitles='${escapedSrtPath}':force_style='FontName=${selectedFont},FontSize=${selectedSize},PrimaryColour=${primaryColour},OutlineColour=${borderColour},BorderStyle=3,MarginV=25'`,
-      '-pix_fmt yuv420p',
-      '-movflags +faststart',
-    ])
-    .videoCodec('libx264')
-    .audioCodec('aac')
-    .on('start', () => {
-      console.log('Bắt đầu render video với font:', selectedFont);
-    })
-    .on('end', () => {
-      try {
-        if (fs.existsSync(srtPath)) fs.unlinkSync(srtPath);
-      } catch (e) {
-        console.warn(e.message);
-      }
-
-      res.render('workspace', {
-        title: 'Video Hoàn Tất',
-finalSuccess: true,
-        outputVideoUrl: `/outputs/${outputVideoName}`,
-        srtContent: srtContent
-      });
-    })
-    .on('error', (err) => {
-      console.error('Lỗi FFmpeg:', err.message);
-      res.render('workspace', {
-        title: 'Lỗi Xử Lý Video',
-        error: 'Có lỗi khi xuất video: ' + err.message,
-      });
-    })
-    .save(outputVideoPath);
 };

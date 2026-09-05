@@ -1,83 +1,71 @@
-<!-- Hero Section -->
-<div class="hero-banner py-5 py-lg-6 mb-5">
-  <div class="container py-5 text-center">
-    <span class="badge bg-primary bg-opacity-25 text-info border border-info border-opacity-25 px-3 py-2 rounded-pill mb-3">
-      ✨ Công Nghệ Nhận Diện Giọng Nói Whisper AI Thế Hệ Mới
-    </span>
-    <h1 class="display-4 fw-extrabold text-white mb-4 mt-2">
-      Tự Động Tạo & Dịch Phụ Đề Cho Video <br>
-      <span class="brand-gradient">Chỉ Trong Vài Giây</span>
-    </h1>
-    <p class="lead text-light text-opacity-75 mx-auto mb-5" style="max-width: 680px;">
-      Tự động nhận diện tiếng Việt, dịch chuẩn xác video tiếng Anh, tiếng Trung. Tùy chỉnh font chữ, viền màu và gắn cứng (Hardsub) trực tiếp vào video cực nét.
-    </p>
-    <div class="d-flex justify-content-center gap-3">
-      <a href="/workspace" class="btn btn-gradient btn-lg px-5 py-3 rounded-pill fw-bold">
-        <i class="bi bi-magic me-2"></i> Trải Nghiệm Tạo Sub
-      </a>
-      <a href="/packages" class="btn btn-outline-light btn-lg px-4 py-3 rounded-pill">
-        Xem Bảng Giá Gói
-      </a>
-    </div>
-  </div>
-</div>
+<div class="py-5 overflow-hidden">
+  <div class="container py-lg-4">
+    <div class="row align-items-center g-5">
+      <div class="col-lg-6 text-center text-lg-start">
+        <div class="d-inline-flex align-items-center gap-2 bg-primary bg-opacity-10 text-primary px-3 py-1 rounded-pill small fw-semibold mb-3">
+          <i class="bi bi-stars"></i> Đột Phá Công Nghệ Whisper v3 AI
+        </div>
 
-<!-- Features Section -->
-<div class="container mb-5 pb-4">
-  <div class="row g-4 text-center mb-5">
-    <div class="col-md-4">
-      <div class="p-4 rounded-4 bg-white border h-100 shadow-sm">
-        <div class="fs-1 text-primary mb-3"><i class="bi bi-lightning-charge-fill"></i></div>
-        <h5 class="fw-bold">Xử Lý Tức Thì</h5>
-        <p class="text-muted small mb-0">Whisper AI trích xuất mốc thời gian (timestamp) từng giây chuẩn xác theo âm thanh giọng nói.</p>
-      </div>
-    </div>
-    <div class="col-md-4">
-      <div class="p-4 rounded-4 bg-white border h-100 shadow-sm">
-        <div class="fs-1 text-warning mb-3"><i class="bi bi-translate"></i></div>
-        <h5 class="fw-bold">Tự Động Dịch Ngôn Ngữ</h5>
-        <p class="text-muted small mb-0">Video tiếng nước ngoài được dịch trọn vẹn và đồng nhất sang Tiếng Việt có dấu hoàn chỉnh.</p>
-      </div>
-    </div>
-    <div class="col-md-4">
-      <div class="p-4 rounded-4 bg-white border h-100 shadow-sm">
-        <div class="fs-1 text-success mb-3"><i class="bi bi-palette-fill"></i></div>
-        <h5 class="fw-bold">Tùy Chỉnh & Sửa Chữa</h5>
-        <p class="text-muted small mb-0">Duyệt và chỉnh sửa từng từ ngữ, thay đổi kiểu font chữ, kích cỡ và màu sắc theo sở thích.</p>
-      </div>
-    </div>
-  </div>
+        <h1 class="display-4 fw-extrabold text-dark tracking-tight mb-3" style="line-height: 1.15;">
+          Tạo Phụ Đề Video Tự Động <span class="text-gradient">Chỉ Trong 10 Giây</span>
+        </h1>
 
-  <!-- Package Cards -->
-  <div class="text-center mb-5">
-    <h2 class="fw-bold">Bảng Giá Dịch Vụ Phụ Đề</h2>
-    <p class="text-muted">Chọn gói phù hợp nhất với nhu cầu làm nội dung của bạn</p>
-  </div>
-  <div class="row g-4">
-    {{#each packages}}
-      <div class="col-md-4">
-        <div class="card card-modern h-100 p-4">
-<div class="card-body d-flex flex-column p-0">
-            <h5 class="fw-bold text-dark mb-1">{{this.name}}</h5>
-            <div class="my-3">
-              <span class="display-6 fw-bold text-primary">{{formatCurrency this.price}}</span>
+        <p class="lead text-secondary mb-4 fs-6" style="line-height: 1.7;">
+          Tạm biệt việc gõ từng câu chữ thủ công. Hệ thống AI tự động phân tích ngữ cảnh, ngắt đoạn chính xác từng mili-giây, dịch tiếng Việt hoàn hảo và render Hardsub chất lượng cao.
+        </p>
+
+        <div class="d-flex flex-column flex-sm-row justify-content-center justify-content-lg-start gap-3">
+          <a href="/workspace" class="btn btn-primary btn-lg rounded-pill px-4 py-3 fw-bold shadow-lg d-flex align-items-center justify-content-center gap-2">
+            <i class="bi bi-play-circle-fill fs-5"></i> Trải Nghiệm Studio Ngay
+          </a>
+          <a href="/packages" class="btn btn-outline-secondary btn-lg rounded-pill px-4 py-3 fw-semibold d-flex align-items-center justify-content-center gap-2">
+            <i class="bi bi-box-seam"></i> Xem Các Gói Cước
+          </a>
+        </div>
+
+        <div class="d-flex align-items-center justify-content-center justify-content-lg-start gap-4 mt-5 pt-2 border-top">
+          <div>
+            <div class="fs-4 fw-extrabold text-dark">99.5%</div>
+            <div class="small text-muted">Độ chuẩn ngữ pháp</div>
+          </div>
+          <div class="vr"></div>
+          <div>
+            <div class="fs-4 fw-extrabold text-dark">10X</div>
+            <div class="small text-muted">Tốc độ xuất video</div>
+          </div>
+          <div class="vr"></div>
+          <div>
+            <div class="fs-4 fw-extrabold text-dark">30 Phút</div>
+            <div class="small text-muted">Tặng miễn phí trải nghiệm</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Video / App Preview Card -->
+      <div class="col-lg-6">
+        <div class="card-modern p-3 p-md-4 position-relative">
+          <div class="d-flex align-items-center gap-2 mb-3 px-2">
+            <div class="rounded-circle bg-danger" style="width: 10px; height: 10px;"></div>
+            <div class="rounded-circle bg-warning" style="width: 10px; height: 10px;"></div>
+            <div class="rounded-circle bg-success" style="width: 10px; height: 10px;"></div>
+            <span class="ms-2 text-muted small font-monospace">preview-subtitle-player.mp4</span>
+          </div>
+          
+          <div class="rounded-4 overflow-hidden position-relative bg-dark d-flex align-items-center justify-content-center text-center p-5 shadow-inner" style="min-height: 320px; background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);">
+            <div class="position-relative z-1 text-white">
+              <i class="bi bi-badge-cc display-1 text-primary mb-3"></i>
+              <h5 class="fw-bold">Biên tập thông minh theo dòng thời gian</h5>
+              <p class="text-secondary small mb-0">Hỗ trợ xuất file .SRT và đóng dấu trực tiếp lên video</p>
             </div>
-            <p class="text-muted small mb-4">{{this.description}}</p>
-            <ul class="list-unstyled d-flex flex-column gap-2 mb-4 small">
-              <li class="d-flex align-items-center gap-2"><i class="bi bi-check-circle-fill text-success"></i> Thời lượng: <b>{{this.durationMinutes}} phút</b></li>
-              <li class="d-flex align-items-center gap-2"><i class="bi bi-check-circle-fill text-success"></i> Độ chính xác: <b>{{this.accuracy}}</b></li>
-              <li class="d-flex align-items-center gap-2"><i class="bi bi-check-circle-fill text-success"></i> Hỗ trợ xuất Hardsub & File SRT</li>
-            </ul>
-            <div class="mt-auto d-flex gap-2">
-              <a href="/packages/{{this.id}}" class="btn btn-outline-secondary w-50 rounded-pill">Chi Tiết</a>
-              <form action="/cart/add" method="POST" class="w-50">
-                <input type="hidden" name="packageId" value="{{this.id}}">
-                <button type="submit" class="btn btn-gradient w-100 rounded-pill">Chọn Mua</button>
-              </form>
+            
+            <div class="position-absolute bottom-0 start-0 end-0 p-3 bg-dark bg-opacity-75 text-center">
+              <span class="badge bg-light text-dark px-3 py-2 rounded-2 fs-6 shadow">
+                "Chào mừng bạn đến với công cụ tạo phụ đề tự động bằng AI!"
+              </span>
             </div>
           </div>
         </div>
       </div>
-    {{/each}}
+    </div>
   </div>
 </div>

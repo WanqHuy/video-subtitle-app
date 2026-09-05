@@ -1,42 +1,51 @@
 <div class="container py-5">
   <div class="row justify-content-center">
     <div class="col-md-5">
-      <div class="card card-modern p-4 p-lg-5 shadow-sm">
+      <div class="card-modern p-4 p-lg-5">
         <div class="text-center mb-4">
-          <i class="bi bi-shield-lock-fill text-primary fs-1"></i>
-          <h3 class="fw-bold mt-2">Đăng Nhập</h3>
-          <p class="text-muted small">Truy cập để sử dụng toàn bộ tính năng của AI Subtitle</p>
+          <div class="rounded-circle bg-primary bg-opacity-10 text-primary d-inline-flex p-3 mb-2">
+            <i class="bi bi-person-fill fs-3"></i>
+          </div>
+          <h3 class="fw-extrabold text-dark tracking-tight">Chào Mừng Trở Lại</h3>
+          <p class="text-muted small">Đăng nhập tài khoản để tiếp tục tạo video</p>
         </div>
 
-        {{#if infoMessage}}
-          <div class="alert alert-warning border-0 rounded-3 small mb-3">
-            <i class="bi bi-exclamation-triangle-fill me-1"></i> {{infoMessage}}
-          </div>
-        {{/if}}
-
         {{#if error}}
-          <div class="alert alert-danger border-0 rounded-3 small mb-3">
-            <i class="bi bi-x-circle-fill me-1"></i> {{error}}
+          <div class="alert alert-danger rounded-3 py-2 small mb-3 border-0 text-center">
+            <i class="bi bi-exclamation-circle me-1"></i> {{error}}
           </div>
         {{/if}}
 
         <form action="/login" method="POST">
           <div class="mb-3">
-            <label class="form-label fw-semibold small">Địa chỉ Email:</label>
-            <input type="email" name="email" class="form-control rounded-3 py-2" placeholder="name@example.com" required>
+            <label class="form-label small fw-bold text-muted">Email:</label>
+            <input type="email" name="email" class="form-control form-control-lg rounded-pill fs-6" placeholder="tenban@gmail.com" value="{{email}}" required>
           </div>
-          <div class="mb-4">
-            <label class="form-label fw-semibold small">Mật khẩu:</label>
-            <input type="password" name="password" class="form-control rounded-3 py-2" placeholder="••••••••" required>
+
+          <div class="mb-3">
+            <label class="form-label small fw-bold text-muted">Mật khẩu:</label>
+            <input type="password" name="password" class="form-control form-control-lg rounded-pill fs-6" placeholder="••••••••" required>
           </div>
-          <button type="submit" class="btn btn-gradient w-100 py-2 rounded-pill fw-bold">
-            Đăng Nhập Ngay
+
+          <!-- Nhớ tài khoản & Ghi nhớ phiên đăng nhập -->
+          <div class="d-flex justify-content-between align-items-center mb-4 px-2">
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" name="rememberMe" id="rememberMe" checked>
+              <label class="form-check-label small text-muted user-select-none" for="rememberMe">
+                Ghi nhớ đăng nhập (30 ngày)
+              </label>
+            </div>
+          </div>
+
+          <button type="submit" class="btn btn-primary btn-lg w-100 rounded-pill py-3 fw-bold shadow">
+            Đăng Nhập
           </button>
         </form>
 
-        <p class="text-center mt-4 text-muted small mb-0">
-          Chưa có tài khoản? <a href="/register" class="text-primary fw-bold text-decoration-none">Đăng ký mới</a>
-        </p>
+        <div class="text-center mt-4 pt-2 border-top">
+          <span class="small text-muted">Chưa có tài khoản? </span>
+          <a href="/register" class="small fw-bold text-primary text-decoration-none">Đăng ký nhận 30 phút miễn phí</a>
+        </div>
       </div>
     </div>
   </div>

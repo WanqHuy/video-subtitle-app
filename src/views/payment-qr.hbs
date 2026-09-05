@@ -1,0 +1,97 @@
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-lg-9">
+      <div class="card-modern p-4 p-lg-5">
+        <div class="text-center mb-4">
+          {{#if isWaitingApproval}}
+            <span class="badge bg-primary bg-opacity-10 text-primary px-3 py-2 rounded-pill fw-semibold">
+              <span class="spinner-border spinner-border-sm me-1"></span> Đang Chờ Admin Duyệt Tiền
+            </span>
+            <h3 class="fw-extrabold text-dark mt-3">Đã Tiếp Nhận Thông Báo</h3>
+            <p class="text-muted small">Hệ thống đang kiểm tra biến động số dư. Trang web sẽ tự động mở khóa ngay sau khi duyệt!</p>
+          {{else}}
+            <span class="badge bg-warning bg-opacity-10 text-warning px-3 py-2 rounded-pill fw-semibold">
+              <span class="spinner-grow spinner-grow-sm me-1"></span> Đang Chờ Chuyển Khoản
+            </span>
+            <h3 class="fw-extrabold text-dark mt-3">Quét Mã VietQR Kích Hoạt Gói</h3>
+            <p class="text-muted small">Mở App ngân hàng bất kỳ để quét mã và chuyển chính xác số tiền bên dưới</p>
+          {{/if}}
+        </div>
+
+        <div class="row g-4 align-items-center">
+          <!-- Cột hiển thị Mã QR -->
+          <div class="col-md-5 text-center border-end-md">
+            <div class="p-3 border rounded-4 d-inline-block bg-white shadow-sm">
+              <img src="{{qrUrl}}" alt="VietQR" class="img-fluid rounded-3" style="max-width: 240px;">
+            </div>
+            <div class="mt-2 text-muted small"><i class="bi bi-shield-check text-success"></i> VietQR chuẩn Napas247</div>
+          </div>
+
+          <!-- Chi tiết thông tin chuyển khoản -->
+          <div class="col-md-7 ps-md-4">
+            <div class="bg-light p-3 p-xl-4 rounded-4 mb-3 border">
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <span class="text-muted small">Ngân hàng:</span>
+                <span class="fw-bold text-dark fs-6">{{bankInfo.bankId}}</span>
+              </div>
+
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <span class="text-muted small">Số tài khoản:</span>
+                <span class="fw-extrabold text-primary fs-5">{{bankInfo.accountNo}}</span>
+              </div>
+
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <span class="text-muted small">Chủ tài khoản:</span>
+                <span class="fw-bold text-dark">{{bankInfo.accountName}}</span>
+              </div>
+
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <span class="text-muted small">Số tiền:</span>
+                <span class="fw-extrabold text-danger fs-4">{{formatCurrency order.total}}</span>
+              </div>
+
+              <div class="d-flex justify-content-between align-items-center pt-2 border-top">
+                <span class="text-muted small">Nội dung (Bắt buộc):</span>
+                <span class="badge bg-danger fs-6 px-3 py-2">{{order.paymentCode}}</span>
+              </div>
+            </div>
+
+            <div class="alert alert-info py-2 small mb-4 rounded-3 border-0 d-flex align-items-center gap-2">
+              <i class="bi bi-info-circle-fill fs-5"></i>
+              <span>Gói cước sẽ cộng thêm <strong>+{{order.addedMinutes}} phút</strong> ngay khi đơn hàng hoàn tất.</span>
+            </div>
+
+            {{#if isWaitingApproval}}
+              <div class="alert alert-success d-flex align-items-center justify-content-center gap-2 py-3 px-3 rounded-pill border-0 shadow-sm mb-0">
+                <span class="spinner-border spinner-border-sm text-success"></span>
+                <span class="small fw-bold text-success">Đã gửi thông báo. Bạn vui lòng chờ giây lát...</span>
+              </div>
+            {{else}}
+              <form action="/order/confirm/{{order._id}}" method="POST">
+                <button type="submit" class="btn btn-outline-success btn-lg w-100 py-3 rounded-pill fw-bold shadow-sm">
+                  <i class="bi bi-check2-circle me-1"></i> Tôi Đã Chuyển Khoản Xong
+                </button>
+              </form>
+            {{/if}}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const orderId = "{{order._id}}";
+  const interval = setInterval(async () => {
+    try {
+      const res = await fetch(`/order/check-status/${orderId}`);
+      const data = await res.json();
+      if (data.status === 'Completed') {
+        clearInterval(interval);
+        window.location.href = `/order/success/${orderId}`;
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  }, 2000);
+</script>

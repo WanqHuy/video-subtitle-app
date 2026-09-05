@@ -1,5 +1,7 @@
 node_modules/
-uploads/
-public/outputs/
-public/temp_videos/
+uploads/*
+!uploads/.gitkeep
+public/outputs/*
+!public/outputs/.gitkeep
 .env
+.DS_Store

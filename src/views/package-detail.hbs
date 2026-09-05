@@ -1,36 +1,70 @@
 <div class="container py-5">
   <div class="row justify-content-center">
-    <div class="col-md-7">
-      <div class="card card-modern p-4 p-lg-5 shadow-sm">
-        <span class="badge bg-primary bg-opacity-10 text-primary px-3 py-2 rounded-pill w-auto mb-3 align-self-start">
-          Gói Dịch Vụ Chính Hãng
-        </span>
-        <h2 class="fw-bold mb-2">{{pkg.name}}</h2>
-        <h3 class="text-primary fw-bold mb-4">{{formatCurrency pkg.price}}</h3>
-        <hr class="opacity-25">
-        <h6 class="fw-bold text-dark mb-2">Mô tả sản phẩm:</h6>
-        <p class="text-muted small mb-4">{{pkg.description}}</p>
-        
-        <h6 class="fw-bold text-dark mb-3">Quyền lợi bao gồm:</h6>
-        <ul class="list-group list-group-flush mb-4 rounded-3 border">
-          <li class="list-group-item py-3 d-flex justify-content-between">
-            <span class="text-muted">Thời lượng âm thanh nhận diện</span>
-            <b>{{pkg.durationMinutes}} phút</b>
+    <div class="col-lg-8">
+      <div class="mb-4">
+        <a href="/packages" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
+          <i class="bi bi-arrow-left me-1"></i> Quay lại Danh Sách Gói
+        </a>
+      </div>
+
+      <div class="card card-modern p-4 p-lg-5 shadow-sm border-0">
+        <div class="d-flex justify-content-between align-items-start mb-4">
+          <div>
+            <span class="badge bg-primary bg-opacity-10 text-primary px-3 py-2 rounded-pill fw-semibold mb-2">
+              Chi Tiết Gói Dịch Vụ
+            </span>
+            <h2 class="fw-bold text-dark mb-1">{{pkg.name}}</h2>
+            <small class="text-muted">Kích hoạt ngay sau khi hoàn tất quét mã QR thanh toán</small>
+          </div>
+          <div class="text-end">
+            <span class="display-6 fw-bold text-primary">{{formatCurrency pkg.price}}</span>
+          </div>
+        </div>
+
+        <div class="row g-3 mb-4">
+          <div class="col-md-6">
+            <div class="p-3 bg-light rounded-3 border">
+              <div class="text-muted small">Thời lượng xử lý cấp thêm:</div>
+              <div class="fw-bold fs-5 text-dark">
+                <i class="bi bi-clock-history text-primary me-1"></i> {{pkg.durationMinutes}} Phút
+              </div>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="p-3 bg-light rounded-3 border">
+              <div class="text-muted small">Độ chính xác nhận diện:</div>
+              <div class="fw-bold fs-5 text-success">
+                <i class="bi bi-bullseye text-success me-1"></i> {{pkg.accuracy}}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <h5 class="fw-bold text-dark mb-2">Mô tả chi tiết quyền lợi:</h5>
+        <p class="text-muted mb-4 lead fs-6" style="line-height: 1.8;">
+          {{pkg.description}}
+        </p>
+
+        <ul class="list-unstyled d-flex flex-column gap-3 mb-5 border-top pt-4">
+          <li class="d-flex align-items-center gap-2">
+            <i class="bi bi-check-circle-fill text-success fs-5"></i>
+            <span>Không giới hạn số lần xuất video hay chỉnh sửa phụ đề trong thời lượng đã mua.</span>
           </li>
-          <li class="list-group-item py-3 d-flex justify-content-between">
-            <span class="text-muted">Độ chuẩn xác Whisper AI</span>
-            <b class="text-success">{{pkg.accuracy}}</b>
+          <li class="d-flex align-items-center gap-2">
+            <i class="bi bi-check-circle-fill text-success fs-5"></i>
+            <span>Hỗ trợ tải xuống file phụ đề <code>.srt</code> độc lập để upload lên YouTube Studio.</span>
           </li>
-          <li class="list-group-item py-3 d-flex justify-content-between">
-            <span class="text-muted">Định dạng hỗ trợ xuất</span>
-            <b>MP4 (Hardsub), SRT, VTT</b>
+          <li class="d-flex align-items-center gap-2">
+            <i class="bi bi-check-circle-fill text-success fs-5"></i>
+            <span>Gắn cứng phụ đề (Hardsub) trực tiếp bằng bộ mã hóa chất lượng cao Full HD.</span>
           </li>
         </ul>
 
         <form action="/cart/add" method="POST">
-          <input type="hidden" name="packageId" value="{{pkg.id}}">
-          <button type="submit" class="btn btn-gradient btn-lg w-100 rounded-pill fw-bold">
-            <i class="bi bi-cart-plus me-2"></i> Thêm Vào Giỏ Hàng
+          <!-- Đảm bảo truyền chính xác pkg._id từ MongoDB -->
+          <input type="hidden" name="packageId" value="{{pkg._id}}">
+          <button type="submit" class="btn btn-primary btn-lg w-100 py-3 rounded-pill fw-bold shadow-sm">
+            <i class="bi bi-cart-plus me-1"></i> Thêm Gói Này Vào Giỏ Hàng
           </button>
         </form>
       </div>
