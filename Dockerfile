@@ -1,8 +1,8 @@
-FROM node:18-bullseye
+FROM node:18-bookworm
 
-# Cài đặt FFmpeg đầy đủ bản quyền và bộ lọc libass từ kho Ubuntu/Debian
+# Cài đặt FFmpeg kèm font hệ thống, bỏ qua driver đồ họa thừa để tránh lỗi 404
 RUN apt-get update && \
-    apt-get install -y ffmpeg && \
+    apt-get install -y --no-install-recommends ffmpeg fonts-dejavu-core && \
     rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
