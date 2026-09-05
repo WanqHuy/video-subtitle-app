@@ -1,20 +1,25 @@
 const path = require('path');
 const fs = require('fs');
 const ffmpeg = require('fluent-ffmpeg');
+const ffmpegInstaller = require('@ffmpeg-installer/ffmpeg');
+const ffprobeInstaller = require('@ffprobe-installer/ffprobe');
 const Groq = require('groq-sdk');
 const User = require('../models/User');
 
-// DÁN API KEY GROQ MỚI CỦA BẠN VÀO ĐÂY NẾU CHƯA CÓ TRONG FILE .ENV:
-const GROQ_API_KEY_FALLBACK = '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';
+// Tự động gán đường dẫn thực thi của FFmpeg & FFprobe cho cả Windows và Linux hosting
+ffmpeg.setFfmpegPath(ffmpegInstaller.path);
+ffmpeg.setFfprobePath(ffprobeInstaller.path);
 
+// Khởi tạo Groq API Client
+const GROQ_API_KEY_FALLBACK = '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'; // Nhớ thay key mới của bạn nếu key này hết hạn
 const groq = new Groq({ 
-  apiKey: process.env.GROQ_API_KEY || GROQ_API_KEY_FALLBACK
+  apiKey: process.env.GROQ_API_KEY || GROQ_API_KEY_FALLBACK 
 });
 
 const getVideoDurationMinutes = (filePath) => {
   return new Promise((resolve, reject) => {
     ffmpeg.ffprobe(filePath, (err, metadata) => {
-      if (err) return reject(err);
+      if (err) return reject(new Error('Không thể đọc thông tin video qua FFprobe: ' + err.message));
       const seconds = (metadata && metadata.format && metadata.format.duration) ? metadata.format.duration : 0;
       resolve(Math.max(1, Math.ceil(seconds / 60)));
     });
@@ -22,19 +27,26 @@ const getVideoDurationMinutes = (filePath) => {
 };
 
 exports.getWorkspace = async (req, res) => {
-  const user = await User.findById(req.session.user.id || req.session.user._id).lean();
-  res.render('workspace', { 
-    title: 'Studio Phụ Đề AI',
-    tier: user ? (user.tier || 'free') : 'free'
-  });
+  try {
+    const user = await User.findById(req.session.user.id || req.session.user._id).lean();
+    res.render('workspace', { 
+      title: 'Studio Phụ Đề AI',
+      tier: user ? (user.tier || 'free') : 'free'
+    });
+  } catch (err) {
+    res.render('workspace', { title: 'Studio Phụ Đề AI', tier: 'free' });
+  }
 };
 
 exports.uploadVideo = async (req, res) => {
+  let uploadedPath = req.file ? req.file.path : null;
+  let audioPath = null;
+
   try {
     if (!req.file) {
       return res.render('workspace', { 
         title: 'Studio Phụ Đề AI', 
-        error: 'Vui lòng chọn một tệp video hợp lệ!' 
+        error: 'Vui lòng chọn hoặc kéo thả một tệp video hợp lệ!' 
       });
     }
 
@@ -42,8 +54,16 @@ exports.uploadVideo = async (req, res) => {
     const user = await User.findById(userId);
     const userTier = user ? (user.tier || 'free') : 'free';
 
-    const videoDuration = await getVideoDurationMinutes(req.file.path);
+    // 1. Đo thời lượng video
+    let videoDuration = 1;
+    try {
+      videoDuration = await getVideoDurationMinutes(uploadedPath);
+    } catch (probeErr) {
+      console.error('Lỗi FFprobe:', probeErr.message);
+      videoDuration = 1; // Mặc định 1 phút nếu không đọc được metadata
+    }
 
+    // 2. Phân quyền giới hạn độ dài video
     const MAX_LIMITS = {
       free: 3,
       basic: 15,
@@ -53,40 +73,45 @@ exports.uploadVideo = async (req, res) => {
 
     const maxAllowed = MAX_LIMITS[userTier] || 3;
     if (videoDuration > maxAllowed) {
-      if (fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
+      if (fs.existsSync(uploadedPath)) fs.unlinkSync(uploadedPath);
       return res.render('workspace', {
         title: 'Studio Phụ Đề AI',
         tier: userTier,
-        error: `Gói cước [${userTier.toUpperCase()}] chỉ cho phép video tối đa ${maxAllowed} phút/lần. Video này dài ${videoDuration} phút. Vui lòng nâng cấp gói cao hơn!`
+        error: `Gói [${userTier.toUpperCase()}] chỉ hỗ trợ video tối đa ${maxAllowed} phút. Video này dài ${videoDuration} phút. Vui lòng nâng cấp gói!`
       });
     }
 
+    // 3. Kiểm tra số phút còn lại của tài khoản
     if (!user || user.remainingMinutes < videoDuration) {
-      if (fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
+      if (fs.existsSync(uploadedPath)) fs.unlinkSync(uploadedPath);
       const currentMin = user ? user.remainingMinutes : 0;
       return res.render('workspace', {
         title: 'Studio Phụ Đề AI',
         tier: userTier,
-        error: `Tài khoản của bạn chỉ còn ${currentMin} phút, nhưng video dài ${videoDuration} phút. Vui lòng mua thêm gói cước!`
+        error: `Tài khoản của bạn chỉ còn ${currentMin} phút, không đủ xử lý video dài ${videoDuration} phút. Vui lòng mua thêm gói!`
       });
     }
 
     req.session.currentVideoDuration = videoDuration;
 
-    const audioPath = path.join(__dirname, '../../uploads', `${req.file.filename}.mp3`);
+    // Đảm bảo thư mục uploads tồn tại
+    const uploadDir = path.join(__dirname, '../../uploads');
+    if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
 
-    // Tách âm thanh MP3 từ video
+    audioPath = path.join(uploadDir, `${req.file.filename}.mp3`);
+
+    // 4. Trích xuất âm thanh MP3 từ video
     await new Promise((resolve, reject) => {
-      ffmpeg(req.file.path)
+      ffmpeg(uploadedPath)
         .noVideo()
         .audioCodec('libmp3lame')
         .output(audioPath)
         .on('end', resolve)
-        .on('error', reject)
+        .on('error', (err) => reject(new Error('Lỗi trích xuất audio FFmpeg: ' + err.message)))
         .run();
     });
 
-    // Gọi AI Whisper
+    // 5. Gửi file âm thanh sang Groq Whisper AI
     const transcription = await groq.audio.transcriptions.create({
       file: fs.createReadStream(audioPath),
       model: 'whisper-large-v3',
@@ -94,6 +119,7 @@ exports.uploadVideo = async (req, res) => {
       response_format: 'verbose_json'
     });
 
+    // Dọn dẹp file MP3 trung gian
     if (fs.existsSync(audioPath)) {
       fs.unlinkSync(audioPath);
     }
@@ -126,10 +152,14 @@ exports.uploadVideo = async (req, res) => {
       videoDuration
     });
   } catch (err) {
-    console.error('Lỗi xử lý video:', err);
+    console.error('Lỗi khi xử lý video:', err);
+    // Dọn dẹp file thừa nếu gặp sự cố
+    if (audioPath && fs.existsSync(audioPath)) fs.unlinkSync(audioPath);
+    
     res.render('workspace', { 
       title: 'Studio Phụ Đề AI', 
-      error: `Lỗi xử lý âm thanh: ${err.message}` 
+      tier: req.session.user ? req.session.user.tier : 'free',
+      error: `Lỗi xử lý hệ thống: ${err.message}` 
     });
   }
 };
@@ -137,10 +167,15 @@ exports.uploadVideo = async (req, res) => {
 exports.renderVideo = async (req, res) => {
   try {
     const { videoFilename, srtContent, fontName, fontSize, fontColor } = req.body;
-    const srtPath = path.join(__dirname, '../../uploads', `${videoFilename}.srt`);
+    
+    const uploadDir = path.join(__dirname, '../../uploads');
+    const outputDir = path.join(__dirname, '../../public/outputs');
+    if (!fs.existsSync(outputDir)) fs.mkdirSync(outputDir, { recursive: true });
+
+    const srtPath = path.join(uploadDir, `${videoFilename}.srt`);
     const outputFilename = `subtitled-${videoFilename}`;
-    const outputPath = path.join(__dirname, '../../public/outputs', outputFilename);
-    const inputPath = path.join(__dirname, '../../uploads', videoFilename);
+    const outputPath = path.join(outputDir, outputFilename);
+    const inputPath = path.join(uploadDir, videoFilename);
 
     const userId = req.session.user.id || req.session.user._id;
     const user = await User.findById(userId);
@@ -189,9 +224,10 @@ exports.renderVideo = async (req, res) => {
         });
       })
       .on('error', (err) => {
-        console.error('Lỗi render:', err);
+        console.error('Lỗi render video:', err);
         res.render('workspace', { 
           title: 'Studio Phụ Đề AI', 
+          tier: userTier,
           error: `Lỗi render video: ${err.message}` 
         });
       })
