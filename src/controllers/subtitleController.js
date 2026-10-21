@@ -14,7 +14,6 @@ try {
   console.log('Sử dụng FFmpeg mặc định hệ thống');
 }
 
-const GROQ_API_KEY_FALLBACK = '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';
 const groq = new Groq({ 
   apiKey: process.env.GROQ_API_KEY || GROQ_API_KEY_FALLBACK 
 });
